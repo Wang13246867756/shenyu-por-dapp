@@ -1,309 +1,177 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神预 DApp - AI驱动链上预测生态</title>
-    <script src="https://cdn.jsdelivr.net/npm/web3@4.1.1/dist/web3.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            padding: 30px 20px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            margin-bottom: 30px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .header h1 {
-            font-size: 32px;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: #cbd5e1;
-            font-size: 16px;
-        }
-
-        .card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-        }
-
-        .card h2 {
-            font-size: 22px;
-            margin-bottom: 18px;
-            color: #e2e8f0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            color: #cbd5e1;
-        }
-
-        .wallet-box {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: rgba(255,255,255,0.07);
-            border-radius: 14px;
-            margin-bottom: 20px;
-        }
-
-        .wallet-address {
-            color: #a5f3fc;
-            font-weight: 500;
-        }
-
-        button {
-            padding: 14px 24px;
-            border-radius: 12px;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        button.primary {
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            color: #fff;
-        }
-
-        button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-        }
-
-        .bet-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .bet-group button {
-            flex: 1;
-            padding: 18px;
-            font-size: 17px;
-        }
-
-        input {
-            width: 100%;
-            padding: 16px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.07);
-            border: 1px solid rgba(255,255,255,0.15);
-            color: #fff;
-            font-size: 16px;
-            outline: none;
-            margin-bottom: 10px;
-        }
-
-        .tip {
-            color: #94a3b8;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        .label {
-            color: #cbd5e1;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
-
-        .status {
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 14px;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .status.active {
-            background: rgba(74, 222, 128, 0.1);
-            color: #4ade80;
-        }
-
-        .status.off {
-            background: rgba(248, 113, 113, 0.1);
-            color: #f87171;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>神预 DApp</title>
+<script src="https://cdn.jsdelivr.net/npm/web3@4.1.1/dist/web3.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif}
+body{background:#0F172A;color:#fff;padding-bottom:100px}
+.page{display:none;padding:20px;max-width:500px;margin:0 auto}
+.page.active{display:block}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#1E293B;display:flex;padding:16px 0;border-top:1px solid #333}
+.nav-item{flex:1;text-align:center;font-size:12px;color:#94A3B8}
+.nav-item.active{color:#60A5FA}
+.card{background:rgba(255,255,255,0.06);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid rgba(255,255,255,0.1)}
+.title{font-size:24px;margin-bottom:16px}
+input{width:100%;padding:14px;border-radius:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#fff;margin:10px 0}
+button{width:100%;padding:16px;border:none;border-radius:12px;color:#fff;font-weight:600;margin:8px 0}
+.btn-yes{background:#22C55E}
+.btn-no{background:#EF4444}
+.btn-primary{background:#60A5FA}
+.coin-select{display:flex;gap:10px;margin:10px 0}
+.coin-select button{flex:1;padding:12px}
+.coin-select .active{background:#60A5FA}
+.flex{display:flex;gap:10px}
+.category{display:flex;gap:8px;overflow-x:auto;margin:10px 0}
+.category button{white-space:nowrap;width:auto;padding:10px 14px;background:rgba(255,255,255,0.1)}
+.info{color:#CBD5E1;font-size:14px;line-height:1.6;margin:4px 0}
+</style>
 </head>
-
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🐉 神预 DApp</h1>
-            <p>AI 驱动 · 链上二元预测生态 · BSC 测试网正式版</p>
-        </div>
 
-        <!-- 钱包连接 -->
-        <div class="card">
-            <h2>🔗 钱包连接</h2>
-            <div class="wallet-box">
-                <div>
-                    <div class="label">当前钱包</div>
-                    <div class="wallet-address" id="walletAddr">未连接</div>
-                </div>
-                <button id="connectBtn" class="primary" onclick="connectWallet()">连接钱包</button>
-            </div>
-            <div class="tip">支持：MetaMask / TP Wallet / 小狐狸 / TokenPocket</div>
-        </div>
+<div class="page active" id="home">
+<div style="text-align:center;margin:30px 0">
+<h1 style="background:linear-gradient(90deg,#60A5FA,#818CF8);-webkit-background-clip:text;color:transparent">神预 DApp</h1>
+<p>AI驱动链上二元预测生态</p>
+</div>
+<div class="card">
+<h3>钱包连接</h3>
+<p class="info" id="wallet">未连接</p>
+<button class="btn-primary" onclick="connectWallet()">连接钱包</button>
+</div>
+<div class="card">
+<button onclick="showPage('game')">游戏大厅</button>
+<button onclick="showPage('ai')">AI预测中心</button>
+<button onclick="showPage('me')">个人中心</button>
+</div>
+</div>
 
-        <!-- 游戏面板 -->
-        <div class="card">
-            <h2>🎮 预测游戏 #1</h2>
-            <div class="status active">进行中</div>
+<div class="page" id="game">
+<h2 class="title">游戏大厅</h2>
+<div class="category">
+<button>加密货币</button>
+<button>热点事件</button>
+<button>体育赛事</button>
+</div>
 
-            <div class="info-row">
-                <span>合约地址</span>
-                <span>0x952eE1c26245533C9aD5f5C92B554f0C1cE29423</span>
-            </div>
-            <div class="info-row">
-                <span>网络</span>
-                <span>BSC Testnet (ChainID: 97)</span>
-            </div>
+<div class="card">
+<h3>BTC将突破10万U？</h3>
+<div class="info">选择投注资产</div>
+<div class="coin-select">
+<button id="coinBnb" class="active" onclick="switchCoin('BNB')">BNB</button>
+<button id="coinUsdt" onclick="switchCoin('USDT')">USDT</button>
+</div>
+<input type="number" id="amount" placeholder="输入投注金额">
+<div class="flex">
+<button class="btn-yes" onclick="betYes()">YES</button>
+<button class="btn-no" onclick="betNo()">NO</button>
+</div>
+</div>
 
-            <div style="margin-top:20px">
-                <div class="label">投注金额 (BNB)</div>
-                <input type="number" id="betAmount" placeholder="例：0.01" min="0" step="0.001">
-            </div>
+<div class="card">
+<p class="info">赢家79% | 福利池15% | 运营5% | 节点1%</p>
+</div>
+</div>
 
-            <div class="bet-group">
-                <button id="upBtn" disabled onclick="bet(1,0)">📈 买涨</button>
-                <button id="downBtn" disabled onclick="bet(1,1)">📉 买跌</button>
-            </div>
-        </div>
+<div class="page" id="ai">
+<h2 class="title">AI预测中心</h2>
+<div class="card">
+<p class="info">AI预测胜率：71%</p>
+<p class="info">趋势：向上</p>
+<p class="info">数据：全网聚合</p>
+</div>
+<div class="card">
+<p class="info">深度数据分析</p>
+<p class="info">提升预测成功率</p>
+<p class="info">链上不可篡改</p>
+<p class="info">智能合约自动结算</p>
+</div>
+</div>
 
-        <!-- 奖励领取 -->
-        <div class="card">
-            <h2>💰 奖励结算</h2>
-            <button class="primary" id="claimBtn" disabled onclick="claim(1)" style="width:100%">领取奖励</button>
-            <div class="tip" style="margin-top:12px">预测正确后，奖励自动发放至钱包</div>
-        </div>
+<div class="page" id="me">
+<h2 class="title">个人中心</h2>
+<div class="card">
+<p class="info" id="myaddr">未连接</p>
+</div>
+<div class="card">
+<p class="info">总资产：0.00</p>
+<p class="info">总投注：0次</p>
+<p class="info">预测正确：0次</p>
+<p class="info">胜率：0%</p>
+</div>
 
-        <!-- 分配说明 -->
-        <div class="card">
-            <h2>📊 资金分配规则</h2>
-            <div class="info-row"><span>赢家收益</span><span>79%</span></div>
-            <div class="info-row"><span>福利池</span><span>15%</span></div>
-            <div class="info-row"><span>运营收益</span><span>5%</span></div>
-            <div class="info-row"><span>节点分红</span><span>1%</span></div>
-        </div>
-    </div>
+<div class="card">
+<p class="info">个人活跃度：100</p>
+<p class="info">团队活跃度：0</p>
+<p class="info">福利补贴：0.00（满0.001自动发放）</p>
+<p class="info">活跃度分红：0.00（满0.001自动发放）</p>
+</div>
+
+<div class="card">
+<p class="info">节点等级：普通用户</p>
+<p class="info">节点分红：0.00（满0.001自动发放）</p>
+<p class="info">未达标累计，达标自动到钱包</p>
+</div>
+
+<div class="card">
+<p class="info">生态治理权</p>
+<p class="info">参与分红</p>
+<p class="info">手续费折扣</p>
+<p class="info">生态价值捕获</p>
+</div>
+</div>
+
+<div class="nav">
+<div class="nav-item active" onclick="showPage('home')">首页</div>
+<div class="nav-item" onclick="showPage('game')">游戏</div>
+<div class="nav-item" onclick="showPage('ai')">AI</div>
+<div class="nav-item" onclick="showPage('me')">我的</div>
+</div>
 
 <script>
-// ==============================================
-// 神预 DApp 完整版 · BSC 测试网
-// 已配置：合约地址 + ABI + 全功能 + 高大上UI
-// ==============================================
 const CONTRACT_ADDR = "0x952eE1c26245533C9aD5f5C92B554f0C1cE29423";
-const CHAIN_ID = 97;
-
-const ABI = [
-    {"inputs":[{"internalType":"address","name":"_operate","type":"address"},{"internalType":"address","name":"_node","type":"address"},{"internalType":"address","name":"_pool","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":true,"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint8","name":"option","type":"uint8"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BetPlaced","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint8","name":"result","type":"uint8"}],"name":"GameSettled","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":true,"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"RewardClaimed","type":"event"},
-    {"inputs":[{"internalType":"uint256","name":"gameId","type":"uint256"}],"name":"bet","outputs":[],"stateMutability":"payable","type":"function"},
-    {"inputs":[],"name":"createGame","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"gameId","type":"uint256"}],"name":"claimReward","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint8","name":"result","type":"uint8"}],"name":"settleGame","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"withdrawFee","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"BASE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"NODE_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"OPERATE_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"POOL_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"WINNER_RATE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"gameBets","outputs":[{"internalType":"address","name":"player","type":"address"},{"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint8","name":"option","type":"uint8"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bool","name":"claimed","type":"bool"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"gameCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"games","outputs":[{"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"totalUp","type":"uint256"},{"internalType":"uint256","name":"totalDown","type":"uint256"},{"internalType":"uint8","name":"result","type":"uint8"},{"internalType":"uint8","name":"status","type":"uint8"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"nodeWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"operateWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"poolWallet","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"}
-];
+const ABI = [{"inputs":[{"internalType":"address","name":"_operate","type":"address"},{"internalType":"address","name":"_node","type":"address"},{"internalType":"address","name":"_pool","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"player","type":"address"},{"indexed":true,"internalType":"uint256","name":"gameId","type":"uint256"},{"internalType":"uint8","name":"option","type":"uint8"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BetPlaced","type":"event"},{"inputs":[{"internalType":"uint256","name":"gameId","type":"uint256"}],"name":"bet","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"gameId","type":"uint256"}],"name":"claimReward","outputs":[],"stateMutability":"nonpayable","type":"function"}];
 
 let web3, contract, account;
+let currentCoin = "BNB";
 
-async function connectWallet() {
-    if (!window.ethereum) {
-        alert("请在钱包浏览器打开！");
-        return;
-    }
-
-    const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-    account = accounts[0];
-    document.getElementById("walletAddr").innerText = account;
-    document.getElementById("connectBtn").innerText = "已连接";
-    document.getElementById("connectBtn").disabled = true;
-    document.getElementById("upBtn").disabled = false;
-    document.getElementById("downBtn").disabled = false;
-    document.getElementById("claimBtn").disabled = false;
-
-    web3 = new Web3(window.ethereum);
-    contract = new web3.eth.Contract(ABI, CONTRACT_ADDR);
-    alert("钱包连接成功 ✅");
+function switchCoin(coin) {
+    currentCoin = coin;
+    document.getElementById("coinBnb").classList.remove("active");
+    document.getElementById("coinUsdt").classList.remove("active");
+    document.getElementById("coin" + coin.charAt(0).toUpperCase() + coin.slice(1)).classList.add("active");
 }
 
-async function bet(gameId, option) {
-    if (!account) { alert("请先连接钱包"); return; }
-    const val = document.getElementById("betAmount").value;
-    if (!val || val <= 0) { alert("请输入有效金额"); return; }
-
-    try {
-        await contract.methods.bet(gameId, option).send({
-            from: account,
-            value: web3.utils.toWei(val, "ether")
-        });
-        alert("投注成功 ✅");
-    } catch (e) {
-        alert("投注失败：" + e.message);
-    }
+function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    event.target.classList.add('active');
 }
 
-async function claim(gameId) {
-    if (!account) { alert("请先连接钱包"); return; }
-    try {
-        await contract.methods.claimReward(gameId).send({ from: account });
-        alert("奖励领取成功 ✅");
-    } catch (e) {
-        alert("领取失败：" + e.message);
-    }
+async function connectWallet(){
+    if(!window.ethereum)return alert("请在钱包浏览器打开");
+    const a=await ethereum.request({method:"eth_requestAccounts"});
+    account=a[0];
+    document.getElementById("wallet").innerText=account;
+    document.getElementById("myaddr").innerText=account;
+    web3=new Web3(window.ethereum);
+    contract=new web3.eth.Contract(ABI,CONTRACT_ADDR);
+}
+
+async function betYes(){await bet(1,0)}
+async function betNo(){await bet(1,1)}
+async function bet(gid,opt){
+    if(!account)return alert("请连接钱包");
+    const v=document.getElementById("amount").value;
+    if(!v||v<=0)return alert("输入有效金额");
+    await contract.methods.bet(gid,opt).send({
+        from:account,
+        value:web3.utils.toWei(v,"ether")
+    });
+    alert("投注成功｜"+currentCoin+"："+v);
 }
 </script>
 </body>
