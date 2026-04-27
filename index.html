@@ -3,95 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>神预 DApp</title>
+<title>神预 DApp - AI 预测生态</title>
 <script src="https://cdn.jsdelivr.net/npm/web3@4.1.1/dist/web3.min.js"></script>
 <style>
-* {margin:0;padding:0;box-sizing:border-box;font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif}
-body {background:#060814;color:#fff;min-height:100vh;padding-bottom:100px}
-.page {display:none;padding:24px;max-width:480px;margin:0 auto}
-.page.active {display:block}
-
-/* 顶部卡片玻璃质感 */
-.glass {
-background: rgba(255,255,255,0.03);
-backdrop-filter: blur(20px);
-border-radius: 20px;
-border: 1px solid rgba(255,255,255,0.08);
-padding: 22px;
-margin-bottom: 16px;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+body {
+  background: #0A0F1E;
+  color: #fff;
+  padding-bottom: 100px;
+}
+.page {
+  display: none;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.page.active {
+  display: block;
 }
 
-/* 渐变标题 */
+/* 顶部霓虹渐变 */
 .gradient-text {
-background: linear-gradient(90deg, #00E0FF, #8A2BE2);
--webkit-background-clip: text;
-color: transparent;
-font-weight: 700;
+  background: linear-gradient(90deg, #00E0FF, #6C63FF);
+  -webkit-background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* 玻璃卡片 */
+.glass {
+  background: rgba(255,255,255,0.035);
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 22px;
+  margin-bottom: 18px;
+  backdrop-filter: blur(16px);
+}
+
+/* 预测项目卡片（Polymarket 风格） */
+.market-card {
+  background: rgba(255,255,255,0.04);
+  border-radius: 18px;
+  padding: 20px;
+  margin-bottom: 14px;
+  border-left: 3px solid #00E0FF;
+}
+.market-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.market-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 12px;
+}
+.market-bet {
+  display: flex;
+  gap: 12px;
+}
+.btn-yes {
+  flex:1;
+  padding: 14px;
+  border-radius: 14px;
+  background: #10B981;
+  color:#fff;
+  border:none;
+  font-weight: 600;
+}
+.btn-no {
+  flex:1;
+  padding:14px;
+  border-radius:14px;
+  background:#EF4444;
+  color:#fff;
+  border:none;
+  font-weight:600;
+}
+
+/* 周期切换 */
+.period-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+.period-tab {
+  padding: 10px 18px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: #ccc;
+  white-space: nowrap;
+}
+.period-tab.active {
+  background: #00E0FF;
+  color: #000;
+  font-weight: 600;
+}
+
+/* 分类 */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.category-tab {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  color: #ccc;
+  border: none;
+}
+.category-tab.active {
+  background: #6C63FF;
+  color: #fff;
 }
 
 /* 按钮 */
-.btn {
-width: 100%;
-padding: 18px;
-border-radius: 16px;
-border: none;
-font-size: 16px;
-font-weight: 600;
-margin: 8px 0;
-cursor: pointer;
-transition: 0.2s;
-}
 .btn-primary {
-background: linear-gradient(90deg, #00E0FF, #8A2BE2);
-color: #fff;
+  width: 100%;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #00E0FF, #6C63FF);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  margin-top: 8px;
 }
-.btn-yes {
-background: linear-gradient(90deg, #00D895, #00B87C);
-color: #fff;
-}
-.btn-no {
-background: linear-gradient(90deg, #FF5577, #DD3355);
-color: #fff;
-}
-
-/* 选择器 */
-.period-select, .coin-select {
-display: flex;
-gap: 12px;
-margin: 12px 0;
-}
-.period-select button, .coin-select button {
-flex:1;
-padding:14px;
-border-radius:14px;
-background:rgba(255,255,255,0.05);
-color:#fff;
-border:none;
-cursor:pointer;
-font-weight:500;
-}
-.period-select button.active, .coin-select button.active {
-background:linear-gradient(90deg,#00E0FF,#8A2BE2);
+.btn-outline {
+  width: 100%;
+  padding: 16px;
+  border-radius: 16px;
+  background: transparent;
+  border: 1px solid rgba(0,224,255,0.3);
+  color: #00E0FF;
+  margin-top: 8px;
 }
 
-/* 布局 */
-.flex {display:flex;gap:12px}
-.label {font-size:14px;color:#aaa;margin-bottom:6px}
-.info {color:#ccc;font-size:14px;line-height:1.6;margin:4px 0}
-.title {font-size:28px;margin-bottom:20px}
+/* 输入框 */
+.input-primary {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+/* 信息 */
+.label {
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 6px;
+}
+.info {
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1.6;
+}
 
 /* 底部导航 */
 .nav {
-position:fixed;bottom:0;left:0;right:0;
-background:#0B0E1A;
-display:flex;padding:18px 0;
-border-top:1px solid rgba(255,255,255,0.05);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #0F1629;
+  display: flex;
+  padding: 18px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 .nav-item {
-flex:1;text-align:center;font-size:12px;color:#777;cursor:pointer
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #777;
 }
 .nav-item.active {
-color:#00E0FF;
+  color: #00E0FF;
 }
 </style>
 </head>
@@ -99,161 +197,162 @@ color:#00E0FF;
 
 <!-- 首页 -->
 <div class="page active" id="home">
-<div style="text-align:center;margin:40px 0 30px">
-<h1 class="gradient-text" style="font-size:36px">神预 DApp</h1>
-<p style="color:#777;margin-top:8px">AI 驱动 · 链上预测生态</p>
+  <div style="text-align:center; margin:40px 0 30px">
+    <h1 class="gradient-text" style="font-size:34px">神预 DApp</h1>
+    <p style="color:#888; margin-top:6px">AI 驱动 · 链上预测生态</p>
+  </div>
+
+  <div class="glass">
+    <div class="label">钱包连接</div>
+    <p style="font-size:15px; margin-bottom:8px" id="wallet">未连接</p>
+    <p style="color:#00E0FF; font-weight:600" id="balance">BNB 余额：--</p>
+    <button class="btn-primary" onclick="connectWallet()">连接钱包</button>
+  </div>
+
+  <div class="glass" id="poolData" style="display:none">
+    <div style="font-size:17px; font-weight:600; margin-bottom:12px">平台数据</div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:6px">
+      <span>节点分红池</span>
+      <span style="color:#00E0FF">12500.00 BNB</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; margin-bottom:6px">
+      <span>福利分红池</span>
+      <span style="color:#00E0FF">8620.00 BNB</span>
+    </div>
+    <div style="display:flex; justify-content:space-between">
+      <span>昨日总分红</span>
+      <span style="color:#00E0FF">126.88 BNB</span>
+    </div>
+  </div>
+
+  <div class="glass">
+    <button class="btn-primary" onclick="showPage('game')">预测市场</button>
+    <button class="btn-outline" onclick="showPage('ai')">AI 分析中心</button>
+    <button class="btn-outline" onclick="showPage('me')">个人中心</button>
+  </div>
 </div>
 
-<div class="glass">
-<div class="label">钱包连接</div>
-<p id="wallet" style="color:#fff;margin-bottom:8px">未连接</p>
-<p id="balance" style="color:#00E0FF;font-weight:500">BNB 余额：--</p>
-<button class="btn btn-primary" onclick="connectWallet()">连接钱包</button>
-</div>
-
-<div class="glass" id="poolInfo" style="display:none">
-<div style="font-size:18px;font-weight:600;margin-bottom:12px">平台数据</div>
-<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span>节点分红池</span><span style="color:#00E0FF">12500.00 BNB</span></div>
-<div class="flex" style="justify-content:space-between;margin-bottom:6px"><span>福利分红池</span><span style="color:#00E0FF">8620.00 BNB</span></div>
-<div class="flex" style="justify-content:space-between"><span>昨日总分红</span><span style="color:#00E0FF">126.88 BNB</span></div>
-</div>
-
-<div class="glass">
-<button class="btn btn-primary" onclick="showPage('game')">🎮 进入预测</button>
-<button class="btn" style="background:rgba(255,255,255,0.05);color:#fff" onclick="showPage('ai')">🤖 AI 中心</button>
-<button class="btn" style="background:rgba(255,255,255,0.05);color:#fff" onclick="showPage('me')">👤 个人中心</button>
-</div>
-</div>
-
-<!-- 游戏 -->
+<!-- 预测市场（Polymarket 风格） -->
 <div class="page" id="game">
-<h2 class="gradient-text title">BTC 短期预测</h2>
-<div class="period-select">
-<button class="active" onclick="setPeriod(1)">1 分钟</button>
-<button onclick="setPeriod(3)">3 分钟</button>
-<button onclick="setPeriod(5)">5 分钟</button>
+  <h2 class="gradient-text" style="font-size:26px; margin-bottom:20px">预测市场</h2>
+
+  <div class="category-tabs">
+    <button class="category-tab active">加密货币</button>
+    <button class="category-tab">热点事件</button>
+    <button class="category-tab">体育赛事</button>
+  </div>
+
+  <div class="period-tabs">
+    <button class="period-tab active">1 分钟</button>
+    <button class="period-tab">3 分钟</button>
+    <button class="period-tab">5 分钟</button>
+  </div>
+
+  <!-- 预测项目 -->
+  <div class="market-card">
+    <div class="market-title">BTC 下一期上涨？</div>
+    <div class="market-stats">
+      <span>交易量：$2.4M</span>
+      <span>实时</span>
+    </div>
+    <input class="input-primary" placeholder="投注金额" type="number">
+    <div class="market-bet">
+      <button class="btn-yes">YES</button>
+      <button class="btn-no">NO</button>
+    </div>
+  </div>
+
+  <div class="market-card">
+    <div class="market-title">ETH 下一期上涨？</div>
+    <div class="market-stats">
+      <span>交易量：$1.8M</span>
+      <span>实时</span>
+    </div>
+    <input class="input-primary" placeholder="投注金额" type="number">
+    <div class="market-bet">
+      <button class="btn-yes">YES</button>
+      <button class="btn-no">NO</button>
+    </div>
+  </div>
+
+  <div class="glass">
+    <p class="info">赢家 79%｜福利池 15%｜运营 5%｜节点 1%</p>
+    <p class="info" style="color:#00E0FF; margin-top:6px">分红满 0.001 自动发放至钱包</p>
+  </div>
 </div>
 
-<div class="glass">
-<div class="label">预测目标</div>
-<h3 style="margin-bottom:12px">下一期 BTC 是涨是跌？</h3>
-<div class="label">选择资产</div>
-<div class="coin-select">
-<button id="cBNB" class="active" onclick="setCoin('BNB')">BNB</button>
-<button id="cUSDT" onclick="setCoin('USDT')">USDT</button>
-</div>
-<input style="width:100%;padding:16px;border-radius:14px;background:rgba(255,255,255,0.05);border:none;color:#fff;margin-top:10px" placeholder="输入投注金额" id="amount">
-<div class="flex" style="margin-top:12px">
-<button class="btn btn-yes" onclick="betUp()">✅ 涨</button>
-<button class="btn btn-no" onclick="betDown()">❌ 跌</button>
-</div>
-</div>
-
-<div class="glass">
-<p class="info">赢家 79%｜福利池 15%｜运营 5%｜节点 1%</p>
-<p class="info" style="color:#00E0FF">分红满 0.001 自动发放</p>
-</div>
-</div>
-
-<!-- AI -->
+<!-- AI 中心 -->
 <div class="page" id="ai">
-<h2 class="gradient-text title">AI 预测中心</h2>
-<div class="glass">
-<p class="info">AI 预测胜率：71%</p>
-<p class="info">趋势：向上</p>
-<p class="info">数据来源：全网聚合</p>
-</div>
-<div class="glass">
-<p class="info">深度链上数据分析</p>
-<p class="info">提升预测成功率</p>
-<p class="info">结果不可篡改</p>
-<p class="info">智能合约自动结算</p>
-</div>
+  <h2 class="gradient-text" style="font-size:26px; margin-bottom:20px">AI 预测中心</h2>
+  <div class="glass">
+    <p class="info">AI 预测胜率：71%</p>
+    <p class="info">趋势：向上</p>
+    <p class="info">数据来源：全网聚合</p>
+  </div>
+  <div class="glass">
+    <p class="info">深度链上数据分析</p>
+    <p class="info">提升预测成功率</p>
+    <p class="info">结果不可篡改</p>
+    <p class="info">智能合约自动结算</p>
+  </div>
 </div>
 
 <!-- 个人中心 -->
 <div class="page" id="me">
-<h2 class="gradient-text title">个人中心</h2>
-<div class="glass">
-<p id="myaddr" style="margin-bottom:6px">未连接</p>
-<p id="mybal" style="color:#00E0FF">BNB 余额：--</p>
+  <h2 class="gradient-text" style="font-size:26px; margin-bottom:20px">个人中心</h2>
+  <div class="glass">
+    <p id="myaddr" style="margin-bottom:6px">未连接钱包</p>
+    <p id="mybal" style="color:#00E0FF; font-weight:600">BNB 余额：--</p>
+  </div>
+
+  <div class="glass">
+    <p class="label">邀请链接</p>
+    <p class="info">https://xxx.xxx/invite/xxxx</p>
+    <button class="btn-primary">复制链接</button>
+  </div>
+
+  <div class="glass">
+    <p class="info">活跃度分红：0.00 BNB</p>
+    <p class="info">福利补贴：0.00 BNB</p>
+    <p class="info">节点分红：0.00 BNB</p>
+    <p class="info" style="color:#00E0FF; margin-top:6px">满 0.001 自动到账</p>
+  </div>
+
+  <div class="glass">
+    <p class="info">个人活跃度：100</p>
+    <p class="info">团队活跃度：0</p>
+    <p class="info">团队补贴：0.00 BNB</p>
+  </div>
 </div>
 
-<div class="glass">
-<p class="label">邀请链接</p>
-<p class="info">https://xxx.xxx/invite/xxxx</p>
-<button class="btn btn-primary">复制链接</button>
-</div>
-
-<div class="glass">
-<p class="info">活跃度分红：0.00 BNB</p>
-<p class="info">福利补贴：0.00 BNB</p>
-<p class="info">节点分红：0.00 BNB</p>
-<p class="info" style="color:#00E0FF">满 0.001 自动到钱包</p>
-</div>
-
-<div class="glass">
-<p class="info">个人活跃度：100</p>
-<p class="info">团队活跃度：0</p>
-<p class="info">团队补贴：0.00 BNB</p>
-</div>
-</div>
-
-<!-- 导航 -->
+<!-- 底部导航 -->
 <div class="nav">
-<div class="nav-item active" onclick="showPage('home')">首页</div>
-<div class="nav-item" onclick="showPage('game')">预测</div>
-<div class="nav-item" onclick="showPage('ai')">AI</div>
-<div class="nav-item" onclick="showPage('me')">我的</div>
+  <div class="nav-item active" onclick="showPage('home')">首页</div>
+  <div class="nav-item" onclick="showPage('game')">市场</div>
+  <div class="nav-item" onclick="showPage('ai')">AI</div>
+  <div class="nav-item" onclick="showPage('me')">我的</div>
 </div>
 
 <script>
-let web3, account, contract;
-let coin = "BNB";
-let period = 1;
-
-function setPeriod(p) {
-period = p;
-document.querySelectorAll('.period-select button').forEach(b=>b.classList.remove('active'));
-event.target.classList.add('active');
-}
-
-function setCoin(c) {
-coin = c;
-document.getElementById('cBNB').classList.remove('active');
-document.getElementById('cUSDT').classList.remove('active');
-event.target.classList.add('active');
-}
-
+let web3, account;
 function showPage(id) {
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-event.target.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  event.target.classList.add('active');
 }
-
 async function connectWallet() {
-if(!window.ethereum)return alert("请在钱包浏览器打开");
-web3 = new Web3(window.ethereum);
-const acc = await ethereum.request({method:"eth_requestAccounts"});
-account = acc[0];
-const bal = await web3.eth.getBalance(account);
-const bnb = parseFloat(web3.utils.fromWei(bal,"ether")).toFixed(4);
-
-document.getElementById("wallet").innerText = account;
-document.getElementById("balance").innerText = "BNB 余额：" + bnb;
-document.getElementById("myaddr").innerText = account;
-document.getElementById("mybal").innerText = "BNB 余额：" + bnb;
-document.getElementById("poolInfo").style.display = "block";
-}
-
-async function betUp() { bet(1) }
-async function betDown() { bet(0) }
-async function bet(opt) {
-if(!account)return alert("请连接钱包");
-const v = document.getElementById("amount").value;
-if(!v||v<=0)return alert("输入金额");
-alert("投注成功：" + v + " " + coin);
+  if(!window.ethereum) return alert("请在钱包浏览器打开");
+  web3 = new Web3(window.ethereum);
+  const acc = await ethereum.request({method:"eth_requestAccounts"});
+  account = acc[0];
+  const balWei = await web3.eth.getBalance(account);
+  const bal = parseFloat(web3.utils.fromWei(balWei, "ether")).toFixed(4);
+  document.getElementById("wallet").innerText = account;
+  document.getElementById("balance").innerText = "BNB 余额：" + bal;
+  document.getElementById("myaddr").innerText = account;
+  document.getElementById("mybal").innerText = "BNB 余额：" + bal;
+  document.getElementById("poolData").style.display = "block";
 }
 </script>
 </body>
