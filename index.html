@@ -1,296 +1,618 @@
-<!DOCTYPE html>
+#!/bin/bash
+
+echo "正在生成神预DApp前端完整项目..."
+
+# 创建目录结构
+mkdir -p src/{abis,components,hooks,pages,utils}
+mkdir -p public
+
+# 生成 package.json
+cat > package.json << 'EOF'
+{
+  "name": "divine-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@web3modal/ethereum": "^2.6.2",
+    "@web3modal/react": "^2.6.2",
+    "ethers": "^5.7.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.1",
+    "recharts": "^2.10.3",
+    "wagmi": "^1.4.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.7",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8"
+  }
+}
+EOF
+
+# 生成 vite.config.ts
+cat > vite.config.ts << 'EOF'
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  define: { 'process.env': {} }
+})
+EOF
+
+# 生成 tailwind.config.js
+cat > tailwind.config.js << 'EOF'
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+}
+EOF
+
+# 生成 postcss.config.js
+cat > postcss.config.js << 'EOF'
+export default {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+}
+EOF
+
+# 生成 tsconfig.json
+cat > tsconfig.json << 'EOF'
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
+EOF
+
+# 生成 tsconfig.node.json
+cat > tsconfig.node.json << 'EOF'
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}
+EOF
+
+# 生成 index.html
+cat > index.html << 'EOF'
+<!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>神预 AI 链上预测生态</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    body {
-      background-color: #060a1b;
-      color: #fff;
-      padding-bottom: 50px;
-    }
-    /* 头部导航 */
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      background: #0b1025;
-      border-bottom: 1px solid #1f2947;
-    }
-    .logo {
-      font-size: 22px;
-      font-weight: bold;
-      background: linear-gradient(90deg,#409eff,#7c3aed);
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-    .connect-btn {
-      background: linear-gradient(90deg,#409eff,#7c3aed);
-      border: 0;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    /* 容器 */
-    .wrap {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    /* 数据卡片 */
-    .data-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .data-card {
-      background: #101833;
-      border-radius: 10px;
-      padding: 16px;
-      border: 1px solid #1f2947;
-    }
-    .data-card p:first-child {
-      color: #94a3b8;
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-    .data-card p:last-child {
-      font-size: 18px;
-      font-weight: 600;
-    }
-    /* 对局卡片 */
-    .game-card {
-      background: #101833;
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid #1f2947;
-      margin-bottom: 20px;
-    }
-    .game-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    .game-title {
-      font-size: 17px;
-    }
-    .time {
-      color: #ff9500;
-      font-weight: bold;
-    }
-    .bet-box {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-    .yes-btn,.no-btn {
-      padding: 30px 10px;
-      border-radius: 10px;
-      text-align: center;
-      cursor: pointer;
-      border: none;
-      font-size: 20px;
-      font-weight: bold;
-    }
-    .yes-btn {
-      background: rgba(16,185,129,0.15);
-      border: 1px solid #10b981;
-      color: #10b981;
-    }
-    .no-btn {
-      background: rgba(239,68,68,0.15);
-      border: 1px solid #ef4444;
-      color: #ef4444;
-    }
-    /* 底部模块 */
-    .info-card {
-      background: #101833;
-      border-radius: 12px;
-      padding: 20px;
-      border: 1px solid #1f2947;
-    }
-    .info-title {
-      font-size: 16px;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #1f2947;
-    }
-    .info-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      color: #cbd5e1;
-      font-size: 14px;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>神预DApp - AI驱动链上预测</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+EOF
 
-<div class="header">
-  <div class="logo">神预AI生态</div>
-  <button class="connect-btn" id="connectWallet">连接钱包</button>
-</div>
+# 生成 .env 文件（稍后替换地址）
+cat > .env << 'EOF'
+VITE_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
+VITE_USDC_ADDRESS=0xe11A86849d99F524cAC3E7A0Ec1241828e332C62
+VITE_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID
+EOF
 
-<div class="wrap">
-  <div class="data-row">
-    <div class="data-card">
-      <p>奖池总额</p>
-      <p id="poolNum">0.00 BNB</p>
-    </div>
-    <div class="data-card">
-      <p>我的余额</p>
-      <p id="balanceNum">0.00 BNB</p>
-    </div>
-    <div class="data-card">
-      <p>团队活跃度</p>
-      <p id="activeNum">0</p>
-    </div>
-    <div class="data-card">
-      <p>待分红</p>
-      <p id="bonusNum">0.00 BNB</p>
-    </div>
+# ========== src 目录文件 ==========
+cat > src/main.tsx << 'EOF'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+)
+EOF
+
+cat > src/index.css << 'EOF'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+  color: white;
+}
+EOF
+
+cat > src/vite-env.d.ts << 'EOF'
+/// <reference types="vite/client" />
+EOF
+
+# 生成 ABI 文件（完整功能所需的 ABI）
+cat > src/abis/DivinePrediction.json << 'EOF'
+{
+  "abi": [
+    {"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"points","type":"uint256"}],"name":"ActivityAwarded","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"bool","name":"choice","type":"bool"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BetPlaced","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"string","name":"description","type":"string"},{"indexed":false,"internalType":"uint256","name":"endTime","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"creatorFeeRate","type":"uint256"}],"name":"MarketCreated","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"bool","name":"result","type":"bool"},{"indexed":false,"internalType":"uint256","name":"winnerPool","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"creatorShare","type":"uint256"}],"name":"MarketResolved","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"WinningClaimed","type":"event"},
+    {"inputs":[],"name":"activityRewardPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"},{"internalType":"bool","name":"_choice","type":"bool"},{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"bet","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"address","name":"_referrer","type":"address"}],"name":"bindReferrer","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[],"name":"claimActivityDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[],"name":"claimAllWinnings","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"claimCreatorFee","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[],"name":"claimNodeDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"claimWinning","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_durationSeconds","type":"uint256"},{"internalType":"uint256","name":"_creatorFeeRate","type":"uint256"}],"name":"createMarket","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"getMarketBasic","outputs":[{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"resolved","type":"bool"},{"internalType":"bool","name":"result","type":"bool"},{"internalType":"uint256","name":"totalYes","type":"uint256"},{"internalType":"uint256","name":"totalNo","type":"uint256"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"creatorFeeRate","type":"uint256"},{"internalType":"uint256","name":"creatorEarned","type":"uint256"},{"internalType":"bool","name":"creatorFeeClaimed","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getTotalPendingWinnings","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isNode","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"marketCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"nodeRewardPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"pendingWinnings","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"referrer","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"},{"internalType":"bool","name":"_result","type":"bool"}],"name":"resolveMarket","outputs":[],"stateMutability":"nonpayable","type":"function"},
+    {"inputs":[],"name":"totalActivityPoints","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userActivityPoints","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userParticipatedMarkets","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+    {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawPlatformFee","outputs":[],"stateMutability":"nonpayable","type":"function"}
+  ]
+}
+EOF
+
+# 生成 src/utils/format.ts
+cat > src/utils/format.ts << 'EOF'
+import { ethers } from 'ethers';
+export const formatUSDC = (value: ethers.BigNumberish) => ethers.utils.formatUnits(value, 6);
+export const parseUSDC = (value: string) => ethers.utils.parseUnits(value, 6);
+export const shortenAddress = (addr: string) => addr ? `${addr.slice(0,6)}...${addr.slice(-4)}` : '';
+EOF
+
+# 生成 src/hooks/useContract.ts
+cat > src/hooks/useContract.ts << 'EOF'
+import { useAccount, useSigner } from 'wagmi';
+import { ethers } from 'ethers';
+import { useMemo } from 'react';
+import DivinePredictionABI from '../abis/DivinePrediction.json';
+
+export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+export const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
+
+export const useContract = () => {
+  const { address } = useAccount();
+  const { data: signer } = useSigner();
+  const contract = useMemo(() => {
+    if (!signer) return null;
+    return new ethers.Contract(CONTRACT_ADDRESS, DivinePredictionABI.abi, signer);
+  }, [signer]);
+  return { contract, address, signer };
+};
+EOF
+
+# 生成 src/hooks/useAutoClaim.ts
+cat > src/hooks/useAutoClaim.ts << 'EOF'
+import { useEffect } from 'react';
+import { useContract } from './useContract';
+import { useAccount } from 'wagmi';
+
+export const useAutoClaim = () => {
+  const { contract } = useContract();
+  const { address } = useAccount();
+
+  useEffect(() => {
+    if (!contract || !address) return;
+    const claimAll = async () => {
+      try {
+        const total = await contract.getTotalPendingWinnings(address);
+        if (total?.gt(0)) {
+          const tx = await contract.claimAllWinnings();
+          await tx.wait();
+          console.log('自动领取所有奖金成功');
+        }
+      } catch (err) { console.error(err); }
+    };
+    claimAll();
+    const filter = contract.filters.MarketResolved();
+    const onResolved = async (...args: any[]) => {
+      const marketId = args[0].toNumber();
+      const pending = await contract.pendingWinnings(address, marketId);
+      if (pending.gt(0)) {
+        try {
+          await (await contract.claimWinning(marketId)).wait();
+          console.log(`市场${marketId}奖金自动到账`);
+        } catch(e) {}
+      }
+    };
+    contract.on(filter, onResolved);
+    return () => { contract.off(filter, onResolved); };
+  }, [contract, address]);
+};
+EOF
+
+# 生成 src/components/Web3ModalProvider.tsx
+cat > src/components/Web3ModalProvider.tsx << 'EOF'
+import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
+import { Web3Modal } from '@web3modal/react'
+import { configureChains, createConfig, WagmiConfig } from 'wagmi'
+import { polygonMumbai } from 'wagmi/chains'
+
+const chains = [polygonMumbai]
+const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
+
+const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: w3mConnectors({ projectId, chains }),
+  publicClient
+})
+const ethereumClient = new EthereumClient(wagmiConfig, chains)
+
+export function Web3ModalProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <WagmiConfig config={wagmiConfig}>{children}</WagmiConfig>
+      <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
+    </>
+  )
+}
+EOF
+
+# 生成 src/components/Navbar.tsx
+cat > src/components/Navbar.tsx << 'EOF'
+import { Link, useLocation } from 'react-router-dom';
+import { useWeb3Modal } from '@web3modal/react';
+import { useAccount } from 'wagmi';
+import { shortenAddress } from '../utils/format';
+
+export const Navbar = () => {
+  const { open } = useWeb3Modal();
+  const { address, isConnected } = useAccount();
+  const location = useLocation();
+  const links = [
+    { to: '/', label: '主页' },
+    { to: '/game', label: '预测' },
+    { to: '/create-event', label: '创建事件' },
+    { to: '/profile', label: '个人中心' },
+    { to: '/ai-store', label: 'AI套餐' }
+  ];
+  return (
+    <nav className="bg-black/40 backdrop-blur-md border-b border-white/10 fixed top-0 w-full z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-8">
+            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">神预DApp</Link>
+            <div className="hidden md:flex space-x-4">
+              {links.map(link => (
+                <Link key={link.to} to={link.to} className={`px-3 py-2 rounded-md text-sm font-medium transition ${location.pathname === link.to ? 'bg-white/20 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{link.label}</Link>
+              ))}
+            </div>
+          </div>
+          <button onClick={() => open()} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl text-sm font-medium">{isConnected ? shortenAddress(address!) : '连接钱包'}</button>
+        </div>
+      </div>
+    </nav>
+  );
+};
+EOF
+
+# 生成 src/components/Layout.tsx
+cat > src/components/Layout.tsx << 'EOF'
+import { ReactNode } from 'react';
+import { Navbar } from './Navbar';
+export const Layout = ({ children }: { children: ReactNode }) => (
+  <div className="pt-16">
+    <Navbar />
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
   </div>
+);
+EOF
 
-  <div class="game-card">
-    <div class="game-top">
-      <div class="game-title">当前预测对局</div>
-      <div class="time" id="countTime">00:03:59</div>
-    </div>
-    <div class="bet-box">
-      <button class="yes-btn" id="betYes">YES 看涨</button>
-      <button class="no-btn" id="betNo">NO 看跌</button>
-    </div>
-  </div>
+# 生成 src/components/MarketCard.tsx
+cat > src/components/MarketCard.tsx << 'EOF'
+import { useState, useEffect } from 'react';
+import { useContract } from '../hooks/useContract';
+import { formatUSDC, parseUSDC, shortenAddress } from '../utils/format';
+import { useSigner } from 'wagmi';
+import { ethers } from 'ethers';
+import { USDC_ADDRESS } from '../hooks/useContract';
 
-  <div class="info-card">
-    <div class="info-title">账号数据</div>
-    <div class="info-item"><span>节点静态收益</span><span id="staticNum">0.00 BNB</span></div>
-    <div class="info-item"><span>团队动态收益</span><span id="dynamicNum">0.00 BNB</span></div>
-    <div class="info-item"><span>直推人数</span><span id="directNum">0</span></div>
-    <div class="info-item"><span>AI会员状态</span><span id="vipText">未开通</span></div>
-  </div>
-</div>
+export const MarketCard = ({ marketId }: { marketId: number }) => {
+  const { contract, address } = useContract();
+  const { data: signer } = useSigner();
+  const [market, setMarket] = useState<any>(null);
+  const [betAmount, setBetAmount] = useState('');
+  const [choice, setChoice] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
 
-<script>
-  // BSC测试网配置
-  const BSC_TEST = {
-    chainId: 97,
-    rpc: "https://data-seed-prebsc-1-s1.binance.org:8545/",
-    name: "BSC测试网"
+  useEffect(() => {
+    if (!contract) return;
+    const load = async () => {
+      const data = await contract.getMarketBasic(marketId);
+      setMarket({
+        description: data[0], endTime: data[1].toNumber(), resolved: data[2], result: data[3],
+        totalYes: data[4], totalNo: data[5], creator: data[6], creatorFeeRate: data[7].toNumber(),
+        creatorEarned: data[8], creatorFeeClaimed: data[9]
+      });
+    };
+    load();
+  }, [contract, marketId]);
+
+  const handleBet = async () => {
+    if (!contract || !signer || choice === null || !betAmount) return alert('请完整填写');
+    setLoading(true);
+    try {
+      const amount = parseUSDC(betAmount);
+      const usdc = new ethers.Contract(USDC_ADDRESS, ['function approve(address spender, uint256 amount) returns (bool)'], signer);
+      await usdc.approve(contract.address, amount);
+      const tx = await contract.bet(marketId, choice, amount);
+      await tx.wait();
+      alert('下注成功！');
+    } catch (err) { console.error(err); alert('下注失败'); }
+    setLoading(false);
   };
 
-  let provider = null;
-  let signer = null;
-  let walletAddr = "";
+  if (!market) return <div className="animate-pulse bg-white/5 rounded-2xl h-48"></div>;
+  return (
+    <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
+      <h3 className="text-xl font-bold mb-2">{market.description}</h3>
+      <div className="text-sm text-gray-300 mb-4">创建者: {shortenAddress(market.creator)} | 抽成: {market.creatorFeeRate/10}%</div>
+      <div className="flex justify-between mb-4">
+        <div className="text-green-400">YES 池: {formatUSDC(market.totalYes)} USDC</div>
+        <div className="text-red-400">NO 池: {formatUSDC(market.totalNo)} USDC</div>
+      </div>
+      <div className="flex gap-4">
+        <input type="number" placeholder="金额 USDC" value={betAmount} onChange={e => setBetAmount(e.target.value)} className="bg-black/30 p-2 rounded flex-1" />
+        <button onClick={() => { setChoice(true); handleBet(); }} disabled={loading} className="bg-green-600 px-6 py-2 rounded">Yes</button>
+        <button onClick={() => { setChoice(false); handleBet(); }} disabled={loading} className="bg-red-600 px-6 py-2 rounded">No</button>
+      </div>
+    </div>
+  );
+};
+EOF
 
-  const connectBtn = document.getElementById("connectWallet");
-  const betYesBtn = document.getElementById("betYes");
-  const betNoBtn = document.getElementById("betNo");
+# 生成页面文件
+cat > src/pages/Home.tsx << 'EOF'
+import { useEffect, useState } from 'react';
+import { useContract } from '../hooks/useContract';
+import { formatUSDC } from '../utils/format';
+export default function Home() {
+  const { contract } = useContract();
+  const [activityPool, setActivityPool] = useState('0');
+  const [nodePool, setNodePool] = useState('0');
+  const [totalPoints, setTotalPoints] = useState('0');
+  useEffect(() => {
+    if (!contract) return;
+    const load = async () => {
+      setActivityPool(formatUSDC(await contract.activityRewardPool()));
+      setNodePool(formatUSDC(await contract.nodeRewardPool()));
+      setTotalPoints((await contract.totalActivityPoints()).toString());
+    };
+    load();
+  }, [contract]);
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-6"><h3>活跃度福利池</h3><p className="text-3xl font-bold">{activityPool} USDC</p></div>
+        <div className="bg-gradient-to-br from-blue-600/30 to-cyan-600/30 rounded-2xl p-6"><h3>节点福利池</h3><p className="text-3xl font-bold">{nodePool} USDC</p></div>
+        <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 rounded-2xl p-6"><h3>总活跃度</h3><p className="text-3xl font-bold">{totalPoints}</p></div>
+      </div>
+      <div className="bg-white/5 rounded-2xl p-6"><h2 className="text-2xl mb-4">热门预测事件</h2><p className="text-gray-400">即将上线，敬请期待</p></div>
+    </div>
+  );
+}
+EOF
 
-  // 绑定点击事件，保证100%可点击
-  connectBtn.addEventListener("click", connectWallet);
-  betYesBtn.addEventListener("click", ()=>submitBet("YES"));
-  betNoBtn.addEventListener("click", ()=>submitBet("NO"));
+cat > src/pages/Game.tsx << 'EOF'
+import { useEffect, useState } from 'react';
+import { useContract } from '../hooks/useContract';
+import { MarketCard } from '../components/MarketCard';
+export default function Game() {
+  const { contract } = useContract();
+  const [marketIds, setMarketIds] = useState<number[]>([]);
+  useEffect(() => {
+    if (!contract) return;
+    const load = async () => {
+      const count = await contract.marketCount();
+      const ids = [];
+      for (let i = 1; i <= count; i++) ids.push(i);
+      setMarketIds(ids);
+    };
+    load();
+  }, [contract]);
+  return (
+    <div><h1 className="text-3xl font-bold mb-6">预测市场</h1>
+      <div className="space-y-4">{marketIds.map(id => <MarketCard key={id} marketId={id} />)}</div>
+    </div>
+  );
+}
+EOF
 
-  // 连接钱包 + 自动切链 + 弹出签名
-  async function connectWallet() {
-    if(!window.ethereum){
-      alert("请先安装小狐狸钱包 MetaMask");
-      return;
-    }
+cat > src/pages/CreateEvent.tsx << 'EOF'
+import { useState } from 'react';
+import { useContract, USDC_ADDRESS } from '../hooks/useContract';
+import { parseUSDC } from '../utils/format';
+import { ethers } from 'ethers';
+import { useSigner } from 'wagmi';
+export default function CreateEvent() {
+  const { contract } = useContract();
+  const { data: signer } = useSigner();
+  const [desc, setDesc] = useState('');
+  const [hours, setHours] = useState(24);
+  const [fee, setFee] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const handleCreate = async () => {
+    if (!contract || !signer) return alert('请连接钱包');
+    setLoading(true);
     try {
-      // 请求钱包
-      await window.ethereum.request({method:"eth_requestAccounts"});
-      provider = new ethers.providers.Web3Provider(window.ethereum);
+      const duration = hours * 3600;
+      const feeRate = fee * 10;
+      const creationFee = parseUSDC('100');
+      const usdc = new ethers.Contract(USDC_ADDRESS, ['function approve(address spender, uint256 amount) returns (bool)'], signer);
+      await usdc.approve(contract.address, creationFee);
+      const tx = await contract.createMarket(desc, duration, feeRate);
+      await tx.wait();
+      alert('创建成功！');
+    } catch (err) { console.error(err); alert('创建失败'); }
+    setLoading(false);
+  };
+  return (
+    <div className="max-w-2xl mx-auto"><h1 className="text-3xl font-bold mb-6">创建预测事件</h1>
+      <div className="bg-white/10 rounded-2xl p-6 space-y-4">
+        <input className="w-full p-3 rounded bg-black/30" placeholder="事件描述" value={desc} onChange={e => setDesc(e.target.value)} />
+        <input type="number" className="w-full p-3 rounded bg-black/30" placeholder="持续时间 (小时)" value={hours} onChange={e => setHours(Number(e.target.value))} />
+        <input type="number" className="w-full p-3 rounded bg-black/30" placeholder="创建者抽成 (%)" value={fee} onChange={e => setFee(Number(e.target.value))} />
+        <div className="text-sm text-gray-300">创建费: 100 USDC</div>
+        <button onClick={handleCreate} disabled={loading} className="w-full bg-purple-600 py-3 rounded-xl">支付并创建</button>
+      </div>
+    </div>
+  );
+}
+EOF
 
-      // 自动切换BSC测试网
-      try{
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{chainId: "0x61"}]
-        });
-      }catch(e){
-        await window.ethereum.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId:"0x61",
-            chainName:"BSC Testnet",
-            rpcUrls:[BSC_TEST.rpc],
-            nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18},
-            blockExplorerUrls:["https://testnet.bscscan.com/"]
-          }]
-        });
-      }
+cat > src/pages/Profile.tsx << 'EOF'
+import { useEffect, useState } from 'react';
+import { useContract } from '../hooks/useContract';
+import { formatUSDC, shortenAddress } from '../utils/format';
+export default function Profile() {
+  const { contract, address } = useContract();
+  const [activity, setActivity] = useState('0');
+  const [isNode, setIsNode] = useState(false);
+  const [referrer, setReferrer] = useState('');
+  const [pending, setPending] = useState('0');
+  useEffect(() => {
+    if (!contract || !address) return;
+    const load = async () => {
+      setActivity((await contract.userActivityPoints(address)).toString());
+      setIsNode(await contract.isNode(address));
+      setReferrer(await contract.referrer(address));
+      setPending(formatUSDC(await contract.getTotalPendingWinnings(address)));
+    };
+    load();
+  }, [contract, address]);
+  const handleClaimDiv = async () => { await contract?.claimActivityDividend(); alert('已领取'); };
+  const handleClaimNode = async () => { await contract?.claimNodeDividend(); alert('已领取'); };
+  const handleBind = async () => {
+    const ref = prompt('邀请人地址');
+    if (ref && contract) await contract.bindReferrer(ref);
+  };
+  return (
+    <div className="max-w-2xl mx-auto space-y-6"><div className="bg-white/10 rounded-2xl p-6">
+      <h2 className="text-2xl font-bold mb-4">个人资料</h2>
+      <div>钱包: {shortenAddress(address || '')}</div>
+      <div>我的活跃度: {activity}</div>
+      <div>节点身份: {isNode ? '是 ⭐' : '否'}</div>
+      <div>邀请人: {shortenAddress(referrer) || '无'}</div>
+      <div>待领取奖金: {pending} USDC</div>
+      <div className="flex gap-4 mt-4">
+        <button onClick={handleClaimDiv} className="bg-green-600 px-4 py-2 rounded">领取活跃度分红</button>
+        {isNode && <button onClick={handleClaimNode} className="bg-purple-600 px-4 py-2 rounded">领取节点分红</button>}
+        <button onClick={handleBind} className="bg-blue-600 px-4 py-2 rounded">绑定邀请人</button>
+      </div>
+    </div></div>
+  );
+}
+EOF
 
-      signer = provider.getSigner();
-      walletAddr = await signer.getAddress();
+cat > src/pages/AIStore.tsx << 'EOF'
+import { useState } from 'react';
+export default function AIStore() {
+  const [selected, setSelected] = useState('monthly');
+  const plans = { monthly: { price: 29, days: 30 }, quarterly: { price: 69, days: 90 }, yearly: { price: 199, days: 365 } };
+  const handlePurchase = () => alert(`购买${selected}套餐，支付${plans[selected as keyof typeof plans].price} USDC（AI功能即将开放）`);
+  return (
+    <div className="max-w-4xl mx-auto"><h1 className="text-3xl font-bold text-center mb-8">AI 智能预测套餐</h1>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Object.entries(plans).map(([key, plan]) => (
+          <div key={key} className={`bg-white/10 rounded-2xl p-6 text-center cursor-pointer ${selected===key?'ring-2 ring-purple-500':''}`} onClick={() => setSelected(key as any)}>
+            <h3 className="text-2xl font-bold capitalize">{key}</h3><p className="text-3xl my-4">{plan.price} USDC</p><p>{plan.days}天有效</p>
+            <button onClick={handlePurchase} className="mt-6 bg-yellow-600 px-6 py-2 rounded w-full">购买</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+EOF
 
-      // 弹出签名
-      const signMsg = "欢迎登录神预AI生态\n钱包地址：" + walletAddr;
-      await signer.signMessage(signMsg);
+# 生成 App.tsx
+cat > src/App.tsx << 'EOF'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Web3ModalProvider } from './components/Web3ModalProvider';
+import { Layout } from './components/Layout';
+import { useAutoClaim } from './hooks/useAutoClaim';
+import Home from './pages/Home';
+import Game from './pages/Game';
+import Profile from './pages/Profile';
+import AIStore from './pages/AIStore';
+import CreateEvent from './pages/CreateEvent';
 
-      connectBtn.innerText = walletAddr.slice(0,6)+"..."+walletAddr.slice(-4);
-      loadData();
-      alert("钱包连接+签名验证成功！");
-    } catch (err) {
-      alert("操作失败："+err.message);
-    }
-  }
+function AppContent() {
+  useAutoClaim();
+  return (
+    <Layout>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/game" element={<Game />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/ai-store" element={<AIStore />} />
+        <Route path="/create-event" element={<CreateEvent />} />
+      </Routes>
+    </Layout>
+  );
+}
 
-  // 下注签名
-  async function submitBet(type) {
-    if(!walletAddr){
-      alert("请先连接钱包");
-      return;
-    }
-    try{
-      const betMsg = "确认提交"+type+"方向下注";
-      await signer.signMessage(betMsg);
-      alert(type+" 下注签名完成，提交链上处理中");
-    }catch(err){
-      alert("下注取消或失败");
-    }
-  }
+function App() {
+  return (
+    <Web3ModalProvider>
+      <BrowserRouter>
+        <AppContent />
+      </BrowserRouter>
+    </Web3ModalProvider>
+  );
+}
+export default App;
+EOF
 
-  // 加载模拟数据
-  function loadData(){
-    document.getElementById("poolNum").innerText = "96.3215 BNB";
-    document.getElementById("balanceNum").innerText = "2.1568 BNB";
-    document.getElementById("activeNum").innerText = "216";
-    document.getElementById("bonusNum").innerText = "0.7530 BNB";
-    document.getElementById("staticNum").innerText = "0.3210 BNB";
-    document.getElementById("dynamicNum").innerText = "1.1250 BNB";
-    document.getElementById("directNum").innerText = "9";
-    document.getElementById("vipText").innerText = "季度VIP";
-  }
-
-  // 自动倒计时
-  function countDown(){
-    let timeStr = document.getElementById("countTime").innerText;
-    let arr = timeStr.split(":");
-    let h = parseInt(arr[0]),m=parseInt(arr[1]),s=parseInt(arr[2]);
-    s--;
-    if(s<0){s=59;m--;}
-    if(m<0){m=59;h--;}
-    if(h<0&&m<0&&s<0) return;
-    document.getElementById("countTime").innerText = 
-      String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
-  }
-  setInterval(countDown,1000);
-</script>
-
-</body>
-</html>
+echo "✅ 所有文件生成完毕！"
+echo "接下来执行以下命令："
+echo "  npm install"
+echo "  npm run dev"
+echo "然后修改 .env 文件中的合约地址和 WalletConnect Project ID"
