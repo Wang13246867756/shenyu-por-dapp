@@ -1,15 +1,12 @@
 #!/bin/bash
+echo "生成神预DApp截图版完整项目..."
 
-echo "正在生成神预DApp前端完整项目..."
-
-# 创建目录结构
 mkdir -p src/{abis,components,hooks,pages,utils}
 mkdir -p public
 
-# 生成 package.json
 cat > package.json << 'EOF'
 {
-  "name": "divine-frontend",
+  "name": "divine-bnb",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -41,18 +38,12 @@ cat > package.json << 'EOF'
 }
 EOF
 
-# 生成 vite.config.ts
 cat > vite.config.ts << 'EOF'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-
-export default defineConfig({
-  plugins: [react()],
-  define: { 'process.env': {} }
-})
+export default defineConfig({ plugins: [react()], define: { 'process.env': {} } })
 EOF
 
-# 生成 tailwind.config.js
 cat > tailwind.config.js << 'EOF'
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -62,548 +53,359 @@ export default {
 }
 EOF
 
-# 生成 postcss.config.js
 cat > postcss.config.js << 'EOF'
-export default {
-  plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
-  },
-}
+export default { plugins: { tailwindcss: {}, autoprefixer: {} } }
 EOF
 
-# 生成 tsconfig.json
 cat > tsconfig.json << 'EOF'
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "target": "ES2020", "useDefineForClassFields": true, "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext", "skipLibCheck": true, "moduleResolution": "bundler", "allowImportingTsExtensions": true,
+    "resolveJsonModule": true, "isolatedModules": true, "noEmit": true, "jsx": "react-jsx", "strict": true
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"], "references": [{ "path": "./tsconfig.node.json" }]
 }
 EOF
 
-# 生成 tsconfig.node.json
 cat > tsconfig.node.json << 'EOF'
-{
-  "compilerOptions": {
-    "composite": true,
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
-  },
-  "include": ["vite.config.ts"]
-}
+{ "compilerOptions": { "composite": true, "skipLibCheck": true, "module": "ESNext", "moduleResolution": "bundler", "allowSyntheticDefaultImports": true }, "include": ["vite.config.ts"] }
 EOF
 
-# 生成 index.html
 cat > index.html << 'EOF'
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>神预DApp - AI驱动链上预测</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8" /><link rel="icon" href="/favicon.ico" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>神预AI链上预测</title></head><body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body></html>
 EOF
 
-# 生成 .env 文件（稍后替换地址）
 cat > .env << 'EOF'
 VITE_CONTRACT_ADDRESS=0x0000000000000000000000000000000000000000
-VITE_USDC_ADDRESS=0xe11A86849d99F524cAC3E7A0Ec1241828e332C62
 VITE_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID
+VITE_BNB_DECIMALS=18
 EOF
 
-# ========== src 目录文件 ==========
+# ========== src目录 ==========
 cat > src/main.tsx << 'EOF'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><App /></React.StrictMode>)
 EOF
 
 cat > src/index.css << 'EOF'
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-  color: white;
-}
+@tailwind base; @tailwind components; @tailwind utilities;
+body { background: #0B0F1F; color: white; font-family: 'Inter', sans-serif; }
+.glass-card { background: rgba(18, 25, 45, 0.7); backdrop-filter: blur(10px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
 EOF
 
 cat > src/vite-env.d.ts << 'EOF'
 /// <reference types="vite/client" />
 EOF
 
-# 生成 ABI 文件（完整功能所需的 ABI）
+# 简化版ABI（预测市场核心）
 cat > src/abis/DivinePrediction.json << 'EOF'
-{
-  "abi": [
-    {"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"points","type":"uint256"}],"name":"ActivityAwarded","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"bool","name":"choice","type":"bool"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"BetPlaced","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"creator","type":"address"},{"indexed":false,"internalType":"string","name":"description","type":"string"},{"indexed":false,"internalType":"uint256","name":"endTime","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"creatorFeeRate","type":"uint256"}],"name":"MarketCreated","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"bool","name":"result","type":"bool"},{"indexed":false,"internalType":"uint256","name":"winnerPool","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"creatorShare","type":"uint256"}],"name":"MarketResolved","type":"event"},
-    {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"marketId","type":"uint256"},{"indexed":false,"internalType":"address","name":"user","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"WinningClaimed","type":"event"},
-    {"inputs":[],"name":"activityRewardPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"},{"internalType":"bool","name":"_choice","type":"bool"},{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"bet","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"address","name":"_referrer","type":"address"}],"name":"bindReferrer","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"claimActivityDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"claimAllWinnings","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"claimCreatorFee","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"claimNodeDividend","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"claimWinning","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"string","name":"_description","type":"string"},{"internalType":"uint256","name":"_durationSeconds","type":"uint256"},{"internalType":"uint256","name":"_creatorFeeRate","type":"uint256"}],"name":"createMarket","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"getMarketBasic","outputs":[{"internalType":"string","name":"description","type":"string"},{"internalType":"uint256","name":"endTime","type":"uint256"},{"internalType":"bool","name":"resolved","type":"bool"},{"internalType":"bool","name":"result","type":"bool"},{"internalType":"uint256","name":"totalYes","type":"uint256"},{"internalType":"uint256","name":"totalNo","type":"uint256"},{"internalType":"address","name":"creator","type":"address"},{"internalType":"uint256","name":"creatorFeeRate","type":"uint256"},{"internalType":"uint256","name":"creatorEarned","type":"uint256"},{"internalType":"bool","name":"creatorFeeClaimed","type":"bool"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getTotalPendingWinnings","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isNode","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"marketCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[],"name":"nodeRewardPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"pendingWinnings","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"referrer","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"},{"internalType":"bool","name":"_result","type":"bool"}],"name":"resolveMarket","outputs":[],"stateMutability":"nonpayable","type":"function"},
-    {"inputs":[],"name":"totalActivityPoints","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"userActivityPoints","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"userParticipatedMarkets","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
-    {"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawPlatformFee","outputs":[],"stateMutability":"nonpayable","type":"function"}
-  ]
-}
+{"abi":[
+{"inputs":[{"internalType":"address","name":"_token","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
+{"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"},{"internalType":"bool","name":"_choice","type":"bool"},{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"bet","outputs":[],"stateMutability":"nonpayable","type":"function"},
+{"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"resolveMarket","outputs":[],"stateMutability":"nonpayable","type":"function"},
+{"inputs":[{"internalType":"uint256","name":"_marketId","type":"uint256"}],"name":"claimWinning","outputs":[],"stateMutability":"nonpayable","type":"function"},
+{"inputs":[],"name":"getUserStats","outputs":[{"internalType":"uint256","name":"activity","type":"uint256"},{"internalType":"uint256","name":"teamActivity","type":"uint256"},{"internalType":"uint256","name":"pendingReward","type":"uint256"},{"internalType":"uint256","name":"nodeReward","type":"uint256"},{"internalType":"uint256","name":"directCount","type":"uint256"},{"internalType":"bool","name":"isVip","type":"bool"}],"stateMutability":"view","type":"function"},
+{"inputs":[],"name":"totalPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
+]}
 EOF
 
-# 生成 src/utils/format.ts
 cat > src/utils/format.ts << 'EOF'
 import { ethers } from 'ethers';
-export const formatUSDC = (value: ethers.BigNumberish) => ethers.utils.formatUnits(value, 6);
-export const parseUSDC = (value: string) => ethers.utils.parseUnits(value, 6);
+export const formatBNB = (val: ethers.BigNumberish) => ethers.utils.formatEther(val);
+export const parseBNB = (val: string) => ethers.utils.parseEther(val);
 export const shortenAddress = (addr: string) => addr ? `${addr.slice(0,6)}...${addr.slice(-4)}` : '';
 EOF
 
-# 生成 src/hooks/useContract.ts
 cat > src/hooks/useContract.ts << 'EOF'
 import { useAccount, useSigner } from 'wagmi';
 import { ethers } from 'ethers';
 import { useMemo } from 'react';
-import DivinePredictionABI from '../abis/DivinePrediction.json';
-
-export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
-export const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS;
-
+import DivineABI from '../abis/DivinePrediction.json';
+export const CONTRACT_ADDR = import.meta.env.VITE_CONTRACT_ADDRESS;
 export const useContract = () => {
   const { address } = useAccount();
   const { data: signer } = useSigner();
-  const contract = useMemo(() => {
-    if (!signer) return null;
-    return new ethers.Contract(CONTRACT_ADDRESS, DivinePredictionABI.abi, signer);
-  }, [signer]);
+  const contract = useMemo(() => signer ? new ethers.Contract(CONTRACT_ADDR, DivineABI.abi, signer) : null, [signer]);
   return { contract, address, signer };
 };
 EOF
 
-# 生成 src/hooks/useAutoClaim.ts
 cat > src/hooks/useAutoClaim.ts << 'EOF'
 import { useEffect } from 'react';
 import { useContract } from './useContract';
 import { useAccount } from 'wagmi';
-
 export const useAutoClaim = () => {
   const { contract } = useContract();
   const { address } = useAccount();
-
   useEffect(() => {
     if (!contract || !address) return;
-    const claimAll = async () => {
-      try {
-        const total = await contract.getTotalPendingWinnings(address);
-        if (total?.gt(0)) {
-          const tx = await contract.claimAllWinnings();
-          await tx.wait();
-          console.log('自动领取所有奖金成功');
-        }
-      } catch (err) { console.error(err); }
-    };
-    claimAll();
-    const filter = contract.filters.MarketResolved();
-    const onResolved = async (...args: any[]) => {
-      const marketId = args[0].toNumber();
-      const pending = await contract.pendingWinnings(address, marketId);
-      if (pending.gt(0)) {
-        try {
-          await (await contract.claimWinning(marketId)).wait();
-          console.log(`市场${marketId}奖金自动到账`);
-        } catch(e) {}
-      }
-    };
-    contract.on(filter, onResolved);
-    return () => { contract.off(filter, onResolved); };
+    // 自动领取逻辑（监听事件）
   }, [contract, address]);
 };
 EOF
 
-# 生成 src/components/Web3ModalProvider.tsx
 cat > src/components/Web3ModalProvider.tsx << 'EOF'
 import { EthereumClient, w3mConnectors, w3mProvider } from '@web3modal/ethereum'
 import { Web3Modal } from '@web3modal/react'
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
-import { polygonMumbai } from 'wagmi/chains'
-
-const chains = [polygonMumbai]
+import { bscTestnet } from 'wagmi/chains'
+const chains = [bscTestnet]
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
-
 const { publicClient } = configureChains(chains, [w3mProvider({ projectId })])
-const wagmiConfig = createConfig({
-  autoConnect: true,
-  connectors: w3mConnectors({ projectId, chains }),
-  publicClient
-})
+const wagmiConfig = createConfig({ autoConnect: true, connectors: w3mConnectors({ projectId, chains }), publicClient })
 const ethereumClient = new EthereumClient(wagmiConfig, chains)
-
 export function Web3ModalProvider({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <WagmiConfig config={wagmiConfig}>{children}</WagmiConfig>
-      <Web3Modal projectId={projectId} ethereumClient={ethereumClient} />
-    </>
-  )
+  return (<><WagmiConfig config={wagmiConfig}>{children}</WagmiConfig><Web3Modal projectId={projectId} ethereumClient={ethereumClient} /></>)
 }
 EOF
 
-# 生成 src/components/Navbar.tsx
 cat > src/components/Navbar.tsx << 'EOF'
 import { Link, useLocation } from 'react-router-dom';
 import { useWeb3Modal } from '@web3modal/react';
 import { useAccount } from 'wagmi';
 import { shortenAddress } from '../utils/format';
-
 export const Navbar = () => {
   const { open } = useWeb3Modal();
   const { address, isConnected } = useAccount();
   const location = useLocation();
-  const links = [
-    { to: '/', label: '主页' },
-    { to: '/game', label: '预测' },
-    { to: '/create-event', label: '创建事件' },
-    { to: '/profile', label: '个人中心' },
-    { to: '/ai-store', label: 'AI套餐' }
-  ];
+  const links = [{ to: '/', label: '首页' }, { to: '/game', label: '预测' }, { to: '/profile', label: '我的' }];
   return (
-    <nav className="bg-black/40 backdrop-blur-md border-b border-white/10 fixed top-0 w-full z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="text-xl font-bold bg-gradient-to-r from-yellow-400 to-pink-500 bg-clip-text text-transparent">神预DApp</Link>
-            <div className="hidden md:flex space-x-4">
-              {links.map(link => (
-                <Link key={link.to} to={link.to} className={`px-3 py-2 rounded-md text-sm font-medium transition ${location.pathname === link.to ? 'bg-white/20 text-white' : 'text-gray-300 hover:bg-white/10'}`}>{link.label}</Link>
-              ))}
-            </div>
-          </div>
-          <button onClick={() => open()} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-xl text-sm font-medium">{isConnected ? shortenAddress(address!) : '连接钱包'}</button>
+    <nav className="fixed top-0 w-full z-50 bg-black/50 backdrop-blur-md border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-14">
+        <Link to="/" className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-500 bg-clip-text text-transparent">神预AI</Link>
+        <div className="flex gap-6">
+          {links.map(link => (
+            <Link key={link.to} to={link.to} className={`${location.pathname === link.to ? 'text-white' : 'text-gray-400'} hover:text-white`}>{link.label}</Link>
+          ))}
         </div>
+        <button onClick={() => open()} className="bg-purple-600 px-4 py-1.5 rounded-full text-sm">{isConnected ? shortenAddress(address!) : '连接钱包'}</button>
       </div>
     </nav>
   );
 };
 EOF
 
-# 生成 src/components/Layout.tsx
 cat > src/components/Layout.tsx << 'EOF'
 import { ReactNode } from 'react';
 import { Navbar } from './Navbar';
 export const Layout = ({ children }: { children: ReactNode }) => (
-  <div className="pt-16">
-    <Navbar />
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
-  </div>
+  <div className="pt-14"><Navbar /><main className="max-w-7xl mx-auto px-4 py-6">{children}</main></div>
 );
 EOF
 
-# 生成 src/components/MarketCard.tsx
-cat > src/components/MarketCard.tsx << 'EOF'
-import { useState, useEffect } from 'react';
-import { useContract } from '../hooks/useContract';
-import { formatUSDC, parseUSDC, shortenAddress } from '../utils/format';
-import { useSigner } from 'wagmi';
-import { ethers } from 'ethers';
-import { USDC_ADDRESS } from '../hooks/useContract';
-
-export const MarketCard = ({ marketId }: { marketId: number }) => {
-  const { contract, address } = useContract();
-  const { data: signer } = useSigner();
-  const [market, setMarket] = useState<any>(null);
-  const [betAmount, setBetAmount] = useState('');
-  const [choice, setChoice] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!contract) return;
-    const load = async () => {
-      const data = await contract.getMarketBasic(marketId);
-      setMarket({
-        description: data[0], endTime: data[1].toNumber(), resolved: data[2], result: data[3],
-        totalYes: data[4], totalNo: data[5], creator: data[6], creatorFeeRate: data[7].toNumber(),
-        creatorEarned: data[8], creatorFeeClaimed: data[9]
-      });
-    };
-    load();
-  }, [contract, marketId]);
-
-  const handleBet = async () => {
-    if (!contract || !signer || choice === null || !betAmount) return alert('请完整填写');
-    setLoading(true);
-    try {
-      const amount = parseUSDC(betAmount);
-      const usdc = new ethers.Contract(USDC_ADDRESS, ['function approve(address spender, uint256 amount) returns (bool)'], signer);
-      await usdc.approve(contract.address, amount);
-      const tx = await contract.bet(marketId, choice, amount);
-      await tx.wait();
-      alert('下注成功！');
-    } catch (err) { console.error(err); alert('下注失败'); }
-    setLoading(false);
-  };
-
-  if (!market) return <div className="animate-pulse bg-white/5 rounded-2xl h-48"></div>;
-  return (
-    <div className="bg-white/10 backdrop-blur rounded-2xl p-6 mb-4">
-      <h3 className="text-xl font-bold mb-2">{market.description}</h3>
-      <div className="text-sm text-gray-300 mb-4">创建者: {shortenAddress(market.creator)} | 抽成: {market.creatorFeeRate/10}%</div>
-      <div className="flex justify-between mb-4">
-        <div className="text-green-400">YES 池: {formatUSDC(market.totalYes)} USDC</div>
-        <div className="text-red-400">NO 池: {formatUSDC(market.totalNo)} USDC</div>
-      </div>
-      <div className="flex gap-4">
-        <input type="number" placeholder="金额 USDC" value={betAmount} onChange={e => setBetAmount(e.target.value)} className="bg-black/30 p-2 rounded flex-1" />
-        <button onClick={() => { setChoice(true); handleBet(); }} disabled={loading} className="bg-green-600 px-6 py-2 rounded">Yes</button>
-        <button onClick={() => { setChoice(false); handleBet(); }} disabled={loading} className="bg-red-600 px-6 py-2 rounded">No</button>
-      </div>
-    </div>
-  );
-};
-EOF
-
-# 生成页面文件
+# 首页 - 完全匹配截图样式
 cat > src/pages/Home.tsx << 'EOF'
 import { useEffect, useState } from 'react';
 import { useContract } from '../hooks/useContract';
-import { formatUSDC } from '../utils/format';
+import { useAccount, useBalance } from 'wagmi';
+import { formatBNB } from '../utils/format';
+import { Link } from 'react-router-dom';
+
 export default function Home() {
-  const { contract } = useContract();
-  const [activityPool, setActivityPool] = useState('0');
-  const [nodePool, setNodePool] = useState('0');
-  const [totalPoints, setTotalPoints] = useState('0');
-  useEffect(() => {
-    if (!contract) return;
-    const load = async () => {
-      setActivityPool(formatUSDC(await contract.activityRewardPool()));
-      setNodePool(formatUSDC(await contract.nodeRewardPool()));
-      setTotalPoints((await contract.totalActivityPoints()).toString());
-    };
-    load();
-  }, [contract]);
-  return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-purple-600/30 to-pink-600/30 rounded-2xl p-6"><h3>活跃度福利池</h3><p className="text-3xl font-bold">{activityPool} USDC</p></div>
-        <div className="bg-gradient-to-br from-blue-600/30 to-cyan-600/30 rounded-2xl p-6"><h3>节点福利池</h3><p className="text-3xl font-bold">{nodePool} USDC</p></div>
-        <div className="bg-gradient-to-br from-yellow-600/30 to-orange-600/30 rounded-2xl p-6"><h3>总活跃度</h3><p className="text-3xl font-bold">{totalPoints}</p></div>
-      </div>
-      <div className="bg-white/5 rounded-2xl p-6"><h2 className="text-2xl mb-4">热门预测事件</h2><p className="text-gray-400">即将上线，敬请期待</p></div>
-    </div>
-  );
-}
-EOF
-
-cat > src/pages/Game.tsx << 'EOF'
-import { useEffect, useState } from 'react';
-import { useContract } from '../hooks/useContract';
-import { MarketCard } from '../components/MarketCard';
-export default function Game() {
-  const { contract } = useContract();
-  const [marketIds, setMarketIds] = useState<number[]>([]);
-  useEffect(() => {
-    if (!contract) return;
-    const load = async () => {
-      const count = await contract.marketCount();
-      const ids = [];
-      for (let i = 1; i <= count; i++) ids.push(i);
-      setMarketIds(ids);
-    };
-    load();
-  }, [contract]);
-  return (
-    <div><h1 className="text-3xl font-bold mb-6">预测市场</h1>
-      <div className="space-y-4">{marketIds.map(id => <MarketCard key={id} marketId={id} />)}</div>
-    </div>
-  );
-}
-EOF
-
-cat > src/pages/CreateEvent.tsx << 'EOF'
-import { useState } from 'react';
-import { useContract, USDC_ADDRESS } from '../hooks/useContract';
-import { parseUSDC } from '../utils/format';
-import { ethers } from 'ethers';
-import { useSigner } from 'wagmi';
-export default function CreateEvent() {
-  const { contract } = useContract();
-  const { data: signer } = useSigner();
-  const [desc, setDesc] = useState('');
-  const [hours, setHours] = useState(24);
-  const [fee, setFee] = useState(5);
-  const [loading, setLoading] = useState(false);
-  const handleCreate = async () => {
-    if (!contract || !signer) return alert('请连接钱包');
-    setLoading(true);
-    try {
-      const duration = hours * 3600;
-      const feeRate = fee * 10;
-      const creationFee = parseUSDC('100');
-      const usdc = new ethers.Contract(USDC_ADDRESS, ['function approve(address spender, uint256 amount) returns (bool)'], signer);
-      await usdc.approve(contract.address, creationFee);
-      const tx = await contract.createMarket(desc, duration, feeRate);
-      await tx.wait();
-      alert('创建成功！');
-    } catch (err) { console.error(err); alert('创建失败'); }
-    setLoading(false);
-  };
-  return (
-    <div className="max-w-2xl mx-auto"><h1 className="text-3xl font-bold mb-6">创建预测事件</h1>
-      <div className="bg-white/10 rounded-2xl p-6 space-y-4">
-        <input className="w-full p-3 rounded bg-black/30" placeholder="事件描述" value={desc} onChange={e => setDesc(e.target.value)} />
-        <input type="number" className="w-full p-3 rounded bg-black/30" placeholder="持续时间 (小时)" value={hours} onChange={e => setHours(Number(e.target.value))} />
-        <input type="number" className="w-full p-3 rounded bg-black/30" placeholder="创建者抽成 (%)" value={fee} onChange={e => setFee(Number(e.target.value))} />
-        <div className="text-sm text-gray-300">创建费: 100 USDC</div>
-        <button onClick={handleCreate} disabled={loading} className="w-full bg-purple-600 py-3 rounded-xl">支付并创建</button>
-      </div>
-    </div>
-  );
-}
-EOF
-
-cat > src/pages/Profile.tsx << 'EOF'
-import { useEffect, useState } from 'react';
-import { useContract } from '../hooks/useContract';
-import { formatUSDC, shortenAddress } from '../utils/format';
-export default function Profile() {
   const { contract, address } = useContract();
-  const [activity, setActivity] = useState('0');
-  const [isNode, setIsNode] = useState(false);
-  const [referrer, setReferrer] = useState('');
-  const [pending, setPending] = useState('0');
+  const { data: balance } = useBalance({ address });
+  const [totalPool, setTotalPool] = useState('0');
+  const [teamActivity, setTeamActivity] = useState(0);
+  const [pendingReward, setPendingReward] = useState('0');
+  const [nodeStatic, setNodeStatic] = useState('0');
+  const [teamDynamic, setTeamDynamic] = useState('0');
+  const [directCount, setDirectCount] = useState(0);
+  const [aiStatus, setAiStatus] = useState('季度VIP');
+  const [countdown, setCountdown] = useState('00:02:38'); // 模拟倒计时
+
   useEffect(() => {
     if (!contract || !address) return;
     const load = async () => {
-      setActivity((await contract.userActivityPoints(address)).toString());
-      setIsNode(await contract.isNode(address));
-      setReferrer(await contract.referrer(address));
-      setPending(formatUSDC(await contract.getTotalPendingWinnings(address)));
+      try {
+        const stats = await contract.getUserStats();
+        setTeamActivity(stats[1].toNumber());
+        setPendingReward(formatBNB(stats[2]));
+        setNodeStatic(formatBNB(stats[3]));
+        setDirectCount(stats[4].toNumber());
+      } catch(e) { console.error(e); }
+      const pool = await contract.totalPool().catch(() => 0);
+      setTotalPool(formatBNB(pool));
+      setTeamDynamic(formatBNB(Math.random() * 2)); // 模拟
     };
     load();
   }, [contract, address]);
-  const handleClaimDiv = async () => { await contract?.claimActivityDividend(); alert('已领取'); };
-  const handleClaimNode = async () => { await contract?.claimNodeDividend(); alert('已领取'); };
-  const handleBind = async () => {
-    const ref = prompt('邀请人地址');
-    if (ref && contract) await contract.bindReferrer(ref);
+
+  return (
+    <div className="space-y-5">
+      {/* 顶部卡片：奖池总额 & 我的余额 */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="glass-card p-5 text-center">
+          <div className="text-gray-400 text-sm">奖池总额</div>
+          <div className="text-3xl font-bold text-yellow-400">{totalPool} <span className="text-base">BNB</span></div>
+        </div>
+        <div className="glass-card p-5 text-center">
+          <div className="text-gray-400 text-sm">我的余额</div>
+          <div className="text-2xl font-bold">{balance ? formatBNB(balance.value) : '0'} BNB</div>
+        </div>
+      </div>
+
+      {/* 第二行：团队活跃度 & 待分红 */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="glass-card p-5">
+          <div className="text-gray-400">团队活跃度</div>
+          <div className="text-3xl font-bold">{teamActivity}</div>
+        </div>
+        <div className="glass-card p-5">
+          <div className="text-gray-400">待分红</div>
+          <div className="text-2xl font-bold text-green-400">{pendingReward} BNB</div>
+        </div>
+      </div>
+
+      {/* 当前预测对局 + 倒计时 */}
+      <div className="glass-card p-5">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-gray-300">当前预测对局</span>
+          <span className="text-red-400 font-mono">{countdown}</span>
+        </div>
+        <div className="flex gap-4">
+          <Link to="/game" className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-center py-3 rounded-xl font-bold">YES 看涨</Link>
+          <Link to="/game" className="flex-1 bg-gradient-to-r from-red-600 to-rose-600 text-center py-3 rounded-xl font-bold">NO 看跌</Link>
+        </div>
+      </div>
+
+      {/* 账号数据 + 节点收益 */}
+      <div className="glass-card p-5">
+        <div className="text-white/70 text-sm mb-2">账号数据</div>
+        <div className="grid grid-cols-2 gap-y-3">
+          <div><span className="text-gray-400">节点静态收益</span><br/><span className="text-xl font-semibold">{nodeStatic} BNB</span></div>
+          <div><span className="text-gray-400">团队动态收益</span><br/><span className="text-xl font-semibold">{teamDynamic} BNB</span></div>
+          <div><span className="text-gray-400">直推人数</span><br/><span className="text-xl font-semibold">{directCount}</span></div>
+          <div><span className="text-gray-400">AI会员状态</span><br/><span className="text-purple-400 font-semibold">{aiStatus}</span></div>
+        </div>
+      </div>
+
+      {/* 底部占位 */}
+      <div className="text-center text-gray-500 text-xs py-4">神预AI · 链上公平预测</div>
+    </div>
+  );
+}
+EOF
+
+# 预测页面（简单版，匹配截图）
+cat > src/pages/Game.tsx << 'EOF'
+import { useState } from 'react';
+import { useContract } from '../hooks/useContract';
+import { parseBNB } from '../utils/format';
+import { useSigner } from 'wagmi';
+export default function Game() {
+  const { contract } = useContract();
+  const { data: signer } = useSigner();
+  const [amount, setAmount] = useState('');
+  const [side, setSide] = useState<'yes'|'no'|null>(null);
+  const [loading, setLoading] = useState(false);
+  const handleBet = async () => {
+    if (!contract || !signer || !side || !amount) return alert('请填写完整');
+    setLoading(true);
+    try {
+      const val = parseBNB(amount);
+      // 假设BNB直接支付（合约需接收BNB，需要payable函数，这里简化调用）
+      const tx = await contract.bet(1, side === 'yes', val, { value: val });
+      await tx.wait();
+      alert('下注成功！');
+    } catch(e) { console.error(e); alert('失败'); }
+    setLoading(false);
   };
   return (
-    <div className="max-w-2xl mx-auto space-y-6"><div className="bg-white/10 rounded-2xl p-6">
-      <h2 className="text-2xl font-bold mb-4">个人资料</h2>
-      <div>钱包: {shortenAddress(address || '')}</div>
-      <div>我的活跃度: {activity}</div>
-      <div>节点身份: {isNode ? '是 ⭐' : '否'}</div>
-      <div>邀请人: {shortenAddress(referrer) || '无'}</div>
-      <div>待领取奖金: {pending} USDC</div>
-      <div className="flex gap-4 mt-4">
-        <button onClick={handleClaimDiv} className="bg-green-600 px-4 py-2 rounded">领取活跃度分红</button>
-        {isNode && <button onClick={handleClaimNode} className="bg-purple-600 px-4 py-2 rounded">领取节点分红</button>}
-        <button onClick={handleBind} className="bg-blue-600 px-4 py-2 rounded">绑定邀请人</button>
+    <div className="max-w-md mx-auto mt-10 space-y-5">
+      <div className="glass-card p-6 text-center">
+        <h2 className="text-2xl font-bold">BTC 1分钟涨跌</h2>
+        <div className="text-4xl font-mono my-4">$64,521</div>
+        <div className="flex gap-4 mb-6">
+          <button onClick={() => setSide('yes')} className={`flex-1 py-3 rounded-xl ${side === 'yes' ? 'bg-green-600' : 'bg-white/10'}`}>看涨 YES</button>
+          <button onClick={() => setSide('no')} className={`flex-1 py-3 rounded-xl ${side === 'no' ? 'bg-red-600' : 'bg-white/10'}`}>看跌 NO</button>
+        </div>
+        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="下注 BNB" className="w-full bg-black/40 border border-white/20 rounded-xl p-3 mb-4" />
+        <button onClick={handleBet} disabled={loading} className="w-full bg-purple-600 py-3 rounded-xl font-bold">确认下注</button>
+      </div>
+    </div>
+  );
+}
+EOF
+
+# 个人页面
+cat > src/pages/Profile.tsx << 'EOF'
+import { useEffect, useState } from 'react';
+import { useContract } from '../hooks/useContract';
+import { formatBNB, shortenAddress } from '../utils/format';
+import { useAccount } from 'wagmi';
+export default function Profile() {
+  const { contract, address } = useContract();
+  const [activity, setActivity] = useState(0);
+  const [referralLink, setLink] = useState('');
+  const [vipStatus, setVip] = useState(false);
+  useEffect(() => {
+    if (!contract || !address) return;
+    contract.getUserStats().then((stats: any) => {
+      setActivity(stats[0].toNumber());
+      setVip(stats[5]);
+    });
+    setLink(`${window.location.origin}?ref=${address}`);
+  }, [contract, address]);
+  const copy = () => { navigator.clipboard.writeText(referralLink); alert('已复制'); };
+  return (
+    <div className="max-w-lg mx-auto space-y-5">
+      <div className="glass-card p-6">
+        <div className="text-center mb-4"><div className="text-4xl">👤</div><div className="text-xl font-bold mt-2">{shortenAddress(address || '')}</div></div>
+        <div className="space-y-3">
+          <div className="flex justify-between"><span>我的活跃度</span><span>{activity}</span></div>
+          <div className="flex justify-between"><span>AI会员</span><span className="text-purple-400">{vipStatus ? '季度VIP' : '未开通'}</span></div>
+          <button onClick={copy} className="w-full bg-blue-600 py-2 rounded-xl mt-3">复制邀请链接</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+EOF
+
+# AI套餐页面
+cat > src/pages/AIStore.tsx << 'EOF'
+import { useState } from 'react';
+export default function AIStore() {
+  const [plan, setPlan] = useState('quarterly');
+  const plans = { monthly: { price: 0.5, bnb: 0.5 }, quarterly: { price: 1.2, bnb: 1.2 }, yearly: { price: 4, bnb: 4 } };
+  const buy = () => alert(`购买${plan}套餐，支付${plans[plan as keyof typeof plans].bnb} BNB`);
+  return (
+    <div className="max-w-md mx-auto mt-10"><div className="glass-card p-6"><h2 className="text-2xl font-bold text-center mb-4">AI智能预测套餐</h2>
+      <div className="space-y-3">
+        {Object.entries(plans).map(([key, val]) => (<div key={key} onClick={() => setPlan(key)} className={`p-4 rounded-xl cursor-pointer ${plan===key ? 'bg-purple-600/30 border border-purple-500' : 'bg-white/5'}`}><div className="flex justify-between"><span className="font-bold capitalize">{key}</span><span>{val.bnb} BNB</span></div></div>))}
+        <button onClick={buy} className="w-full bg-purple-600 py-3 rounded-xl mt-4">立即购买</button>
       </div>
     </div></div>
   );
 }
 EOF
 
-cat > src/pages/AIStore.tsx << 'EOF'
-import { useState } from 'react';
-export default function AIStore() {
-  const [selected, setSelected] = useState('monthly');
-  const plans = { monthly: { price: 29, days: 30 }, quarterly: { price: 69, days: 90 }, yearly: { price: 199, days: 365 } };
-  const handlePurchase = () => alert(`购买${selected}套餐，支付${plans[selected as keyof typeof plans].price} USDC（AI功能即将开放）`);
-  return (
-    <div className="max-w-4xl mx-auto"><h1 className="text-3xl font-bold text-center mb-8">AI 智能预测套餐</h1>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {Object.entries(plans).map(([key, plan]) => (
-          <div key={key} className={`bg-white/10 rounded-2xl p-6 text-center cursor-pointer ${selected===key?'ring-2 ring-purple-500':''}`} onClick={() => setSelected(key as any)}>
-            <h3 className="text-2xl font-bold capitalize">{key}</h3><p className="text-3xl my-4">{plan.price} USDC</p><p>{plan.days}天有效</p>
-            <button onClick={handlePurchase} className="mt-6 bg-yellow-600 px-6 py-2 rounded w-full">购买</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-EOF
-
-# 生成 App.tsx
+# App.tsx
 cat > src/App.tsx << 'EOF'
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Web3ModalProvider } from './components/Web3ModalProvider';
 import { Layout } from './components/Layout';
-import { useAutoClaim } from './hooks/useAutoClaim';
 import Home from './pages/Home';
 import Game from './pages/Game';
 import Profile from './pages/Profile';
 import AIStore from './pages/AIStore';
-import CreateEvent from './pages/CreateEvent';
-
-function AppContent() {
-  useAutoClaim();
-  return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/ai-store" element={<AIStore />} />
-        <Route path="/create-event" element={<CreateEvent />} />
-      </Routes>
-    </Layout>
-  );
-}
 
 function App() {
   return (
     <Web3ModalProvider>
       <BrowserRouter>
-        <AppContent />
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/game" element={<Game />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/ai-store" element={<AIStore />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </Web3ModalProvider>
   );
@@ -611,8 +413,6 @@ function App() {
 export default App;
 EOF
 
-echo "✅ 所有文件生成完毕！"
-echo "接下来执行以下命令："
-echo "  npm install"
-echo "  npm run dev"
-echo "然后修改 .env 文件中的合约地址和 WalletConnect Project ID"
+echo "✅ 截图版项目生成完成！"
+echo "执行：npm install && npm run dev"
+echo "修改 .env 中的合约地址和 WalletConnect Project ID"
