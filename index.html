@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shenyu.Por DApp</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
         body {
             background-color: #f8f9fa;
-            font-family: Arial, sans-serif;
-            margin: 0;
             padding: 20px;
         }
         .container {
@@ -19,47 +23,56 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        .header {
-            background-color: #2196f3;
+        .wallet-connect {
+            background-color: #4caf50;
             color: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 15px;
             text-align: center;
             margin-bottom: 20px;
         }
-        .link-box {
-            font-size: 16px;
-            color: #2196f3;
-            padding: 15px;
-            background-color: #e3f2fd;
-            border: 3px solid #2196f3;
-            text-align: center;
-            margin: 20px 0;
-            border-radius: 10px;
-            word-break: break-all;
+        .wallet-connect h2 {
+            margin-bottom: 10px;
         }
-        .contract-info {
+        .wallet-connect p {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #2196f3;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .contract-info, .fund-distribution, .game-list, .feature-list {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
             background-color: #f0f8ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
         }
-        .fund-distribution {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap:10px;
-            margin-bottom: 20px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #2196f3;
+            color: white;
         }
         .fund-box {
             color: white;
             padding: 15px;
             border-radius: 10px;
-            width: 150px;
-            text-align: center;
+            margin: 10px 0;
         }
         .fund-box.winner {
-            background-color:#4caf50;
+            background-color: #4caf50;
         }
         .fund-box.benefit {
             background-color: #2196f3;
@@ -70,64 +83,10 @@
         .fund-box.node {
             background-color: #9c27b0;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table, th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #2196f3;
-            color: white;
-        }
-        .feature-list {
-            background-color: #e8f5e9;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color:#2196f3;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            cursor: pointer;
-            margin: 20px auto;
-            display: block;
-        }
-        .wallet-connect {
-            background-color: #4caf50;
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .game-list {
-            background-color: #f0f8ff;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🐉 Shenyu.Por DApp</h1>
-            <p>GitHub Pages部署版本</p>
-        </div>
-
-        <div class="link-box">
-            https://wang13246867756.github.io/shenyu-por-dapp
-        </div>
-        
         <div class="wallet-connect">
             <h2>🔗 钱包连接</h2>
             <p>请连接你的钱包来参与游戏</p>
@@ -225,28 +184,23 @@
                 <li>✅ 不需要安全组配置</li>
             </ul>
         </div>
-        
-        <button onclick="testLink()">测试GitHub Pages链接</button>
-        
-        <script>
-            function testLink() {
-                alert('GitHub Pages链接：https://wang13246867756.github.io/shenyu-por-dapp');
-            }
-            
-            async function connectWallet() {
-                if(window.ethereum){
-                    try{
-                        const accounts = await ethereum.request({method:'eth_requestAccounts'});
-                        document.getElementById('walletAddr').innerText = '已连接钱包：' + accounts[0];
-                        alert('钱包连接成功！');
-                    }catch(e){
-                        alert('钱包连接被拒绝或失败');
-                    }
-                }else{
-                    alert('请在小狐狸/TP钱包浏览器中打开，再连接钱包');
-                }
-            }
-        </script>
     </div>
+
+    <script>
+        // 这里只是示例代码，要真正连接钱包需要在Web3浏览器中运行并配置合约
+        async function connectWallet() {
+            if (window.ethereum) {
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    document.getElementById('walletAddr').innerText = '已连接钱包：' + accounts[0];
+                    alert('钱包连接成功！（当前为测试环境，无链上交互功能）');
+                } catch (error) {
+                    alert('钱包连接失败：' + error.message);
+                }
+            } else {
+                alert('请在TP钱包、MetaMask等Web3浏览器中打开，才能连接钱包');
+            }
+        }
+    </script>
 </body>
 </html>
