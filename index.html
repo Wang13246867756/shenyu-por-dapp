@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prediction Market DApp</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0a0e17; --bg-card: #131826; --bg-hover: #1a2030; --bg-input: #0d1117;
+  --border: #1e2a3a; --border-light: #2a3a4f;
+  --text: #e4e7ee; --text-dim: #8b95a7; --text-muted: #5a6478;
+  --primary: #00d4ff; --primary-dim: #0099cc; --primary-bg: rgba(0,212,255,0.1);
+  --green: #00e878; --green-bg: rgba(0,232,120,0.1);
+  --red: #ff4757; --red-bg: rgba(255,71,87,0.1);
+  --orange: #ffa502; --orange-bg: rgba(255,165,2,0.1);
+  --purple: #a55eea; --purple-bg: rgba(165,94,234,0.1);
+  --radius: 12px; --radius-sm: 8px;
+}
+body { font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+a { color: var(--primary); text-decoration: none; cursor: pointer; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.header { border-bottom: 1px solid var(--border); padding: 14px 0; position: sticky; top: 0; background: var(--bg); z-index: 100; }
+.header-inner { display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 20px; font-weight: 800; }
+.logo span { color: var(--primary); }
+.nav { display: flex; gap: 24px; margin-left: 40px; }
+.nav a { color: var(--text-dim); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+.nav a:hover, .nav a.active { color: var(--primary); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.chain-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: var(--green-bg); color: var(--green); }
+.chain-badge.offline { background: var(--red-bg); color: var(--red); }
+.addr-tag { padding: 4px 10px; border-radius: 6px; font-size: 13px; background: var(--bg-hover); color: var(--text-dim); font-family: monospace; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.15s; font-family: inherit; }
+.btn-primary { background: var(--primary); color: #000; }
+.btn-primary:hover { background: var(--primary-dim); }
+.btn-outline { background: transparent; border: 1px solid var(--border-light); color: var(--text); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-green { background: var(--green); color: #000; }
+.btn-red { background: var(--red); color: #fff; }
+.btn-lg { padding: 14px 28px; font-size: 15px; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-orange { background: var(--orange-bg); color: var(--orange); }
+.badge-blue { background: var(--primary-bg); color: var(--primary); }
+.badge-gray { background: rgba(138,149,167,0.1); color: var(--text-dim); }
+.badge-purple { background: var(--purple-bg); color: var(--purple); }
+.grid { display: grid; gap: 16px; }
+.grid-2 { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+.grid-3 { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.grid-4 { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.stat-value { font-size: 28px; font-weight: 800; }
+.stat-value-sm { font-size: 20px; font-weight: 700; }
+.stat-label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.pool-bar { height: 8px; border-radius: 4px; overflow: hidden; display: flex; background: var(--bg-input); margin: 10px 0; }
+.pool-bar-a { background: var(--green); transition: width 0.3s; }
+.pool-bar-b { background: var(--red); transition: width 0.3s; }
+.input { width: 100%; padding: 12px 16px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; outline: none; font-family: inherit; transition: border-color 0.2s; }
+.input:focus { border-color: var(--primary); }
+.input::placeholder { color: var(--text-muted); }
+label.field-label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; display: none; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 24px; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; }
+.page { display: none; }
+.page.active { display: block; }
+.table { width: 100%; border-collapse: collapse; }
+.table th { text-align: left; padding: 10px 12px; font-size: 12px; color: var(--text-dim); font-weight: 600; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.5px; }
+.table td { padding: 12px; font-size: 14px; border-bottom: 1px solid var(--border); }
+.table tr:hover td { background: var(--bg-hover); }
+.text-dim { color: var(--text-dim); } .text-muted { color: var(--text-muted); }
+.text-sm { font-size: 13px; } .text-xs { font-size: 12px; }
+.text-green { color: var(--green); } .text-red { color: var(--red); }
+.text-primary { color: var(--primary); } .text-orange { color: var(--orange); }
+.text-purple { color: var(--purple); }
+.text-center { text-align: center; } .text-right { text-align: right; }
+.font-bold { font-weight: 700; } .font-mono { font-family: "SF Mono", "Fira Code", monospace; }
+.mt-8 { margin-top: 8px; } .mt-16 { margin-top: 16px; } .mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; } .mb-16 { margin-bottom: 16px; } .mb-24 { margin-bottom: 24px; }
+.flex { display: flex; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-4 { gap: 4px; } .gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; }
+.flex-wrap { flex-wrap: wrap; }
+.pool-flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.pool-box { text-align: center; padding: 16px 20px; border-radius: var(--radius); border: 1px solid var(--border); min-width: 120px; }
+.pool-box.winners { border-color: var(--green); background: var(--green-bg); }
+.pool-box.welfare { border-color: var(--primary); background: var(--primary-bg); }
+.pool-box.platform { border-color: var(--orange); background: var(--orange-bg); }
+.pool-box.node { border-color: var(--purple); background: var(--purple-bg); }
+.pool-box .pct { font-size: 24px; font-weight: 800; }
+.pool-box .name { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+.pool-arrow { color: var(--text-muted); font-size: 20px; }
+.toast { position: fixed; bottom: 24px; right: 24px; padding: 14px 20px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border-light); z-index: 300; display: none; align-items: center; gap: 10px; font-size: 14px; max-width: 400px; }
+.toast.show { display: flex; }
+.toast.success { border-color: var(--green); }
+.toast.error { border-color: var(--red); }
+.toast.info { border-color: var(--primary); }
+.market-card { cursor: pointer; transition: border-color 0.2s, transform 0.1s; }
+.market-card:hover { border-color: var(--border-light); transform: translateY(-1px); }
+.level-chip { text-align: center; padding: 6px 4px; border-radius: 6px; background: var(--bg-input); border: 1px solid var(--border); }
+.level-chip .lvl { font-size: 11px; color: var(--text-dim); }
+.level-chip .rate { font-size: 14px; font-weight: 700; color: var(--primary); }
+.loading { text-align: center; padding: 40px; color: var(--text-dim); }
+.loading svg { width: 32px; height: 32px; animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.config-bar { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 8px 0; }
+.config-bar-inner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.config-bar label { font-size: 12px; color: var(--text-dim); }
+.config-bar input { padding: 4px 8px; background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 12px; font-family: monospace; }
+.config-bar input.factory-addr { width: 360px; }
+.config-bar input.rpc-url { width: 240px; }
+.empty-state { text-align: center; padding: 60px 20px; }
+.empty-state p { color: var(--text-dim); margin-bottom: 16px; }
+@media (max-width: 768px) {
+  .nav { display: none; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr; }
+  .config-bar input.factory-addr { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== CONFIG BAR ========== -->
+<div class="config-bar">
+  <div class="container config-bar-inner">
+    <label>Factory:</label>
+    <input type="text" class="factory-addr" id="cfgFactory" placeholder="0x..." value="0xa0981b9146474b000dCECb0420CDD9Fac647176A">
+    <label>RPC:</label>
+    <input type="text" class="rpc-url" id="cfgRPC" placeholder="https://..." value="https://data-seed-prebsc-1-s1.binance.org:8545">
+    <label>USDT:</label>
+    <input type="text" class="rpc-url" id="cfgUSDT" placeholder="0x..." value="0x7949a5D051477E8736F2c214AB20746B8Ea2f099">
+    <button class="btn btn-primary btn-sm" onclick="initApp()">连接</button>
+    <span id="connStatus" class="text-xs text-muted">未连接</span>
+  </div>
+</div>
+
+<!-- ========== HEADER ========== -->
+<header class="header">
+  <div class="container header-inner">
+    <div class="flex" style="align-items: center;">
+      <div class="logo"><span>PM</span> DApp</div>
+      <nav class="nav">
+        <a class="nav-link active" data-page="home">市场</a>
+        <a class="nav-link" data-page="create">创建</a>
+        <a class="nav-link" data-page="dashboard">面板</a>
+        <a class="nav-link" data-page="referral">推广</a>
+        <a class="nav-link" data-page="node">节点</a>
+        <a class="nav-link" data-page="admin">管理</a>
+      </nav>
+    </div>
+    <div class="header-right">
+      <span class="chain-badge offline" id="chainBadge">未连接</span>
+      <span class="addr-tag" id="walletAddr" style="display:none;"></span>
+      <button class="btn btn-primary btn-sm" id="connectBtn" onclick="connectWallet()">连接钱包</button>
+    </div>
+  </div>
+</header>
+
+<!-- ========== HOME PAGE ========== -->
+<div class="page active" id="page-home">
+  <div class="container mt-24">
+    <div class="grid grid-4 mb-24">
+      <div class="stat-card"><div class="stat-label">市场总数</div><div class="stat-value text-primary" id="statMarketCount">-</div></div>
+      <div class="stat-card"><div class="stat-label">福利池余额</div><div class="stat-value text-orange" id="statWelfare">- USDT</div></div>
+      <div class="stat-card"><div class="stat-label">运营池余额</div><div class="stat-value text-orange" id="statPlatform">- USDT</div></div>
+      <div class="stat-card"><div class="stat-label">节点池余额</div><div class="stat-value text-purple" id="statNode">- USDT</div></div>
+    </div>
+    <div class="card mb-24" style="padding: 16px;">
+      <div class="flex-between mb-12">
+        <div>
+          <h3 style="font-size: 16px; font-weight: 700;">BTC/USDT 实时行情</h3>
+          <span class="text-primary text-lg" id="klineCurrentPrice">-</span>
+        </div>
+        <div class="flex gap-8">
+          <button class="btn btn-outline btn-sm" onclick="setKlineInterval('1m')">1分</button>
+          <button class="btn btn-outline btn-sm" onclick="setKlineInterval('1h')">1时</button>
+          <button class="btn btn-outline btn-sm" onclick="setKlineInterval('1d')">1日</button>
+        </div>
+      </div>
+      <div style="height: 300px;">
+        <canvas id="klineCanvas" style="width:100%;height:100%;"></canvas>
+      </div>
+    </div>
+    <div class="flex-between mb-16">
+      <h2 style="font-size: 20px; font-weight: 700;">预测市场</h2>
+      <button class="btn btn-primary btn-sm" onclick="switchPage('create')">+ 创建市场</button>
+    </div>
+    <div id="marketListContainer"><div class="loading" id="marketLoading"><p>请先在顶部配置 Factory 地址并点击「连接」</p></div></div>
+  </div>
+</div>
+
+<!-- ========== MARKET DETAIL PAGE ========== -->
+<div class="page" id="page-market">
+  <div class="container mt-24">
+    <button class="btn btn-outline btn-sm mb-16" onclick="switchPage('home')">&larr; 返回列表</button>
+    <div id="marketDetailContainer"></div>
+  </div>
+</div>
+
+<!-- ========== CREATE MARKET PAGE ========== -->
+<div class="page" id="page-create">
+  <div class="container mt-24">
+    <div class="card" style="max-width: 640px; margin: 0 auto;">
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">创建预测市场</h2>
+      <div class="flex gap-12 mb-24">
+        <button class="btn btn-primary" id="createTypeOfficial" onclick="setCreateType(false)">官方创建</button>
+        <button class="btn btn-outline" id="createTypeSelf" onclick="setCreateType(true)">社区创建 (20U保证金)</button>
+      </div>
+      <div class="mb-16">
+        <label class="field-label">预测问题</label>
+        <input class="input" placeholder="例如：BTC 会在 12 月突破 10 万吗？" id="createQuestion">
+      </div>
+      <div class="grid grid-2 mb-16">
+        <div><label class="field-label">选项 A</label><input class="input" placeholder="会" id="createOptionA"></div>
+        <div><label class="field-label">选项 B</label><input class="input" placeholder="不会" id="createOptionB"></div>
+      </div>
+      <div class="grid grid-2 mb-16">
+        <div><label class="field-label">持续天数</label><input class="input" type="number" value="3" min="1" max="90" id="createDuration"></div>
+        <div><label class="field-label">投注代币地址</label><input class="input" id="createTokenAddr" placeholder="0x55d3..."></div>
+      </div>
+      <div id="selfCreateNotice" style="display:none;" class="mb-16">
+        <div class="card" style="background: var(--orange-bg); border-color: var(--orange);">
+          <p class="text-sm text-orange"><b>社区创建须知：</b>需缴纳 20 USDT 保证金（进入奖池）。创建者分成从运营池划扣，不扣玩家资金。</p>
+          <div class="mt-8 text-xs text-orange">
+            <b>分成规则（按输方资金结算）：</b><br>
+            输方 3万～10万U：0.5% | 10万～50万U：1.0% | 50万U+：1.5%<br>
+            低于 3万U 不分成
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width: 100%;" id="createMarketBtn" onclick="createMarket()">创建市场</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========== DASHBOARD PAGE ========== -->
+<div class="page" id="page-dashboard">
+  <div class="container mt-24">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">用户面板</h2>
+    <div id="dashboardContainer"><div class="loading"><p>请先连接钱包</p></div></div>
+  </div>
+</div>
+
+<!-- ========== REFERRAL PAGE ========== -->
+<div class="page" id="page-referral">
+  <div class="container mt-24">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">推广中心</h2>
+    <div id="referralContainer">
+      <div class="card mb-24">
+        <h3 style="font-size: 16px; margin-bottom: 16px;">我的推广链接</h3>
+        <div class="flex gap-12 mb-16">
+          <input class="input" id="referralLink" readonly style="flex:1;" value="请先连接钱包">
+          <button class="btn btn-primary btn-sm" id="copyRefBtn" onclick="copyReferralLink()">复制链接</button>
+        </div>
+        <p class="text-sm text-dim">分享此链接给好友，好友通过链接注册并连接钱包后，即可自动绑定推荐关系，享受团队分红奖励。</p>
+      </div>
+      <div class="grid grid-3 mb-24">
+        <div class="stat-card"><div class="stat-label">直推人数</div><div class="stat-value text-primary" id="refDirectCount">-</div></div>
+        <div class="stat-card"><div class="stat-label">团队活跃度</div><div class="stat-value text-green" id="refTeamActivity">-</div></div>
+        <div class="stat-card"><div class="stat-label">团队层级</div><div class="stat-value text-orange" id="refTeamDepth">-</div></div>
+      </div>
+      <div class="card">
+        <h3 style="font-size: 16px; margin-bottom: 16px;">团队结构</h3>
+        <div id="refTeamTree"><p class="text-dim text-sm">请先连接钱包查看团队结构</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== NODE PAGE ========== -->
+<div class="page" id="page-node">
+  <div class="container mt-24">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">节点中心</h2>
+    <div id="nodeContainer"><div class="loading"><p>请先连接</p></div></div>
+  </div>
+</div>
+
+<!-- ========== ADMIN PAGE ========== -->
+<div class="page" id="page-admin">
+  <div class="container mt-24">
+    <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px;">管理后台</h2>
+    <div id="adminContainer"><div class="loading"><p>请先连接</p></div></div>
+  </div>
+</div>
+
+<!-- ========== BET MODAL ========== -->
+<div class="modal-overlay" id="betModal">
+  <div class="modal">
+    <div class="flex-between mb-16">
+      <h3 style="font-size: 18px; font-weight: 700;">投注确认</h3>
+      <button class="btn btn-outline btn-sm" onclick="closeBetModal()">&#x2715;</button>
+    </div>
+    <div class="card mb-16" style="background: var(--bg-input);">
+      <div class="flex-between mb-8"><span class="text-sm text-dim">市场</span><span class="text-sm" id="betMarketName">-</span></div>
+      <div class="flex-between mb-8"><span class="text-sm text-dim">选项</span><span id="betOption" class="text-sm font-bold text-green">-</span></div>
+      <div class="flex-between"><span class="text-sm text-dim">当前赔率</span><span class="text-sm text-primary" id="betOdds">-</span></div>
+    </div>
+    <div class="mb-16">
+      <label class="field-label">投注金额 (USDT)</label>
+      <input class="input" type="number" value="100" min="1" id="betAmount">
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-outline btn-sm" onclick="setBetAmount(50)">50</button>
+        <button class="btn btn-outline btn-sm" onclick="setBetAmount(100)">100</button>
+        <button class="btn btn-outline btn-sm" onclick="setBetAmount(500)">500</button>
+        <button class="btn btn-outline btn-sm" onclick="setBetAmount(1000)">1000</button>
+      </div>
+    </div>
+    <div class="card mb-16" style="background: var(--bg-input);">
+      <div class="flex-between mb-8"><span class="text-sm text-dim">投注金额</span><span class="text-sm font-bold" id="betSummaryAmount">100 USDT</span></div>
+      <div class="flex-between mb-8"><span class="text-sm text-dim">预估收益</span><span class="text-sm font-bold text-green" id="betSummaryPayout">-</span></div>
+      <div class="flex-between"><span class="text-sm text-dim">活跃度(输方)</span><span class="text-sm text-orange" id="betSummaryActivity">-</span></div>
+    </div>
+    <button class="btn btn-primary btn-lg" style="width: 100%;" id="confirmBetBtn" onclick="confirmBet()">确认投注</button>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div class="toast" id="toast"></div>
+
+<!-- ========== ethers.js v6 CDN ========== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+<!-- ========== Chart.js for K-line ========== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+<script>
+const { ethers } = window;
+
+// ============================================================
+//  ABI 定义 — 与 contracts.ts 完全一致
+// ============================================================
+const FACTORY_ABI = [
+  "function createMarket(string question, string optionA, string optionB, uint256 endTime, address betToken, address priceFeed, int256 targetPrice, bool isUp) returns (address)",
+  "function createSelfMarket(string question, string optionA, string optionB, uint256 endTime, address betToken, address priceFeed, int256 targetPrice, bool isUp) returns (address)",
+  "function settleMarket(address market, uint8 outcome)",
+  "function closeBetting(address market)",
+  "function triggerAutoRefund(address market)",
+  "function bindReferrer(address user, address referrer)",
+  "function triggerWelfareDistribution(address token)",
+  "function triggerNodeDistribution(address token)",
+  "function pauseAll()",
+  "function registerNode(address node, uint8 tier)",
+  "function pause()",
+  "function requestResume()",
+  "function resume()",
+  "function marketCount() view returns (uint256)",
+  "function getMarket(uint256 index) view returns (address)",
+  "function isMarket(address) view returns (bool)",
+  "function isSelfCreated(address) view returns (bool)",
+  "function usdtToken() view returns (address)",
+  "function activityTracker() view returns (address)",
+  "function welfarePool() view returns (address)",
+  "function platformOps() view returns (address)",
+  "function nodePool() view returns (address)",
+  "function teamReward() view returns (address)",
+  "function leaderboard() view returns (address)",
+  "function treasury() view returns (address)",
+  "function paused() view returns (bool)",
+  "function admin() view returns (address)",
+  "function operator() view returns (address)",
+  "function getSupportedTokens() view returns (address[])",
+  "function getAllContracts() view returns (address,address,address,address,address,address)",
+  "event MarketCreated(address indexed market, address indexed creator, string question, bool isSelfCreated)",
+];
+
+const MARKET_ABI = [
+  "function bet(uint8 outcome, uint256 amount)",
+  "function claim()",
+  "function autoRefund()",
+  "function closeBetting()",
+  "function settle(uint8 winningOutcome)",
+  "function getMarketInfo() view returns (string,string,string,uint8,uint8,uint256,uint256,uint256,uint256,bool)",
+  "function getBet(address) view returns (uint256,uint256,bool)",
+  "function getPotentialPayout(address) view returns (uint256)",
+  "function bettorCount() view returns (uint256)",
+  "function totalPoolA() view returns (uint256)",
+  "function totalPoolB() view returns (uint256)",
+  "function totalPool() view returns (uint256)",
+  "function status() view returns (uint8)",
+  "function winningOutcome() view returns (uint8)",
+  "function winnersPool() view returns (uint256)",
+  "function welfarePoolAmt() view returns (uint256)",
+  "function platformPoolAmt() view returns (uint256)",
+  "function nodePoolAmt() view returns (uint256)",
+  "function loserTotal() view returns (uint256)",
+  "function betDeadline() view returns (uint256)",
+  "function endTime() view returns (uint256)",
+  "function betToken() view returns (address)",
+  "function creator() view returns (address)",
+  "function isSelfCreated() view returns (bool)",
+  "function priceFeed() view returns (address)",
+  "function targetPrice() view returns (int256)",
+  "function isUp() view returns (bool)",
+  "function settledPrice() view returns (int256)",
+  "event BetPlaced(address indexed user, uint8 outcome, uint256 amount, uint256 totalA, uint256 totalB)",
+  "event MarketSettled(uint8 winningOutcome, uint256 loserTotal, uint256 winnerPool, uint256 welfareAmt, uint256 platformAmt, uint256 nodeAmt)",
+  "event Claimed(address indexed user, uint256 payout)",
+];
+
+const ERC20_ABI = [
+  "function name() view returns (string)",
+  "function symbol() view returns (string)",
+  "function decimals() view returns (uint8)",
+  "function balanceOf(address) view returns (uint256)",
+  "function allowance(address,address) view returns (uint256)",
+  "function approve(address,uint256) returns (bool)",
+];
+
+const TRACKER_ABI = [
+  "function getActivity(address token, address user) view returns (uint256,uint256,uint256)",
+  "function referrer(address user) view returns (address)",
+  "function effectiveDirectCount(address user) view returns (uint256)",
+  "function tokenTotalActivity(address token) view returns (uint256)",
+  "function bindReferrerBySignature(address user, address referrer, uint256 nonce, bytes signature)",
+  "function nonces(address user) view returns (uint256)",
+  "function getDirectReferrals(address user) view returns (address[])",
+  "function getReferralChain(address user, uint8 maxDepth) view returns (address[])",
+];
+
+const NODE_POOL_ABI = [
+  "function isNode(address) view returns (bool)",
+  "function getNodeTier(address) view returns (uint8)",
+  "function getTierStats() view returns (uint256,uint256,uint256)",
+  "function poolBalance(address) view returns (uint256)",
+  "function registerNode(address node, uint8 tier)",
+  "function historicalInflow(address) view returns (uint256)",
+];
+
+const TEAM_REWARD_ABI = [
+  "function claimTeamReward(address token, address user)",
+  "function distributeDaily(address token, uint256 amount)",
+  "function poolBalance(address) view returns (uint256)",
+];
+
+const PLATFORM_OPS_ABI = [
+  "function isSubscribed(address) view returns (bool)",
+  "function getSubscription(address) view returns (uint8,uint256)",
+  "function poolBalance(address) view returns (uint256)",
+  "function subscribeAI(uint8 subType)",
+];
+
+const WELFARE_POOL_ABI = [
+  "function poolBalance(address) view returns (uint256)",
+  "function historicalInflow(address) view returns (uint256)",
+  "function distribute(address token)",
+];
+
+// ============================================================
+//  全局状态
+// ============================================================
+let D = {
+  factoryAddr: "",
+  rpcUrl: "https://bsc-dataseed1.binance.org",
+  usdtAddr: "0x55d398326f99059fF775485246999027B3197955",
+  provider: null,
+  signer: null,
+  userAddr: null,
+  factory: null,
+  subContracts: {},
+  chainId: 0,
+  connected: false,
+  isSelfCreate: false,
+  currentMarketAddr: null,
+  currentBetOutcome: null,
+};
+
+const STATUS_LABELS = ["进行中", "投注截止", "已结算", "已取消"];
+const TIER_NAMES = ["无", "创世节点", "超级节点", "普通节点"];
+
+// ============================================================
+//  工具函数
+// ============================================================
+function fmt(bn, decimals) {
+  try { return ethers.formatUnits(bn || 0n, decimals || 18); } catch { return "0"; }
+}
+function fmt2(bn, decimals) { return parseFloat(fmt(bn, decimals)).toLocaleString("en-US", { maximumFractionDigits: 2 }); }
+function shorten(a) { return a ? a.slice(0, 6) + "..." + a.slice(-4) : "0x..."; }
+function fmtTs(ts) {
+  if (!ts || ts === 0n) return "-";
+  try { return new Date(Number(ts) * 1000).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
+  catch { return "-"; }
+}
+function showToast(msg, type) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show " + (type || "info");
+  setTimeout(() => t.classList.remove("show"), 4000);
+}
+
+// ============================================================
+//  页面切换
+// ============================================================
+function switchPage(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  const pg = document.getElementById("page-" + name);
+  if (pg) pg.classList.add("active");
+  document.querySelectorAll(".nav-link").forEach(l => l.classList.remove("active"));
+  document.querySelector('.nav-link[data-page="' + name + '"]')?.classList.add("active");
+  window.scrollTo(0, 0);
+  if (name === "home" && D.connected) loadMarkets();
+  if (name === "dashboard" && D.userAddr) loadDashboard();
+  if (name === "node") loadNodePage();
+  if (name === "admin") loadAdminPage();
+}
+
+document.querySelectorAll(".nav-link").forEach(link => {
+  link.addEventListener("click", e => { e.preventDefault(); switchPage(link.dataset.page); });
+});
+
+// ============================================================
+//  初始化：连接 RPC + 读取合约
+// ============================================================
+async function initApp() {
+  D.factoryAddr = document.getElementById("cfgFactory").value.trim();
+  D.rpcUrl = document.getElementById("cfgRPC").value.trim() || "https://bsc-dataseed1.binance.org";
+  D.usdtAddr = document.getElementById("cfgUSDT").value.trim() || "0x55d398326f99059fF775485246999027B3197955";
+
+  if (!D.factoryAddr || D.factoryAddr.length < 42) {
+    showToast("请填写有效的 Factory 合约地址", "error");
+    return;
+  }
+
+  document.getElementById("connStatus").textContent = "连接中...";
+  document.getElementById("connStatus").className = "text-xs text-primary";
+
+  try {
+    D.provider = new ethers.JsonRpcProvider(D.rpcUrl);
+    const network = await D.provider.getNetwork();
+    D.chainId = Number(network.chainId);
+    D.factory = new ethers.Contract(D.factoryAddr, FACTORY_ABI, D.provider);
+
+    // 读取子合约地址
+    const [trackerAddr, welfareAddr, platformAddr, nodeAddr, teamAddr, lbAddr] = await D.factory.getAllContracts();
+    const usdtFromContract = await D.factory.usdtToken();
+    if (usdtFromContract && usdtFromContract !== "0x0000000000000000000000000000000000000000") {
+      D.usdtAddr = usdtFromContract;
+    }
+
+    D.subContracts = {
+      tracker: new ethers.Contract(trackerAddr, TRACKER_ABI, D.provider),
+      welfare: new ethers.Contract(welfareAddr, WELFARE_POOL_ABI, D.provider),
+      platform: new ethers.Contract(platformAddr, PLATFORM_OPS_ABI, D.provider),
+      nodePool: new ethers.Contract(nodeAddr, NODE_POOL_ABI, D.provider),
+      teamReward: new ethers.Contract(teamAddr, TEAM_REWARD_ABI, D.provider),
+    };
+
+    D.connected = true;
+    const chainName = D.chainId === 56 ? "BSC" : D.chainId === 97 ? "BSC Testnet" : "Chain " + D.chainId;
+    document.getElementById("chainBadge").textContent = chainName;
+    document.getElementById("chainBadge").className = "chain-badge";
+    document.getElementById("connStatus").textContent = "已连接 (" + chainName + ")";
+    document.getElementById("connStatus").className = "text-xs text-green";
+
+    showToast("连接成功: " + chainName, "success");
+    loadGlobalStats();
+    loadMarkets();
+  } catch (e) {
+    document.getElementById("connStatus").textContent = "连接失败";
+    document.getElementById("connStatus").className = "text-xs text-red";
+    showToast("连接失败: " + (e.reason || e.message || "未知错误"), "error");
+  }
+}
+
+// ============================================================
+//  MetaMask 钱包连接
+// ============================================================
+async function connectWallet() {
+  if (!D.connected) {
+    showToast("请先在顶部配置 Factory 地址并点击「连接」", "error");
+    return;
+  }
+  if (typeof window.ethereum === "undefined") {
+    showToast("请先安装 MetaMask 钱包", "error");
+    return;
+  }
+  try {
+    const browserProvider = new ethers.BrowserProvider(window.ethereum);
+    const accounts = await browserProvider.send("eth_requestAccounts", []);
+    D.userAddr = accounts[0];
+    D.signer = await browserProvider.getSigner();
+    D.provider = browserProvider;
+
+    // 重建合约实例 with signer
+    D.factory = new ethers.Contract(D.factoryAddr, FACTORY_ABI, D.signer);
+    const [trackerAddr, welfareAddr, platformAddr, nodeAddr, teamAddr, lbAddr] = await D.factory.getAllContracts();
+    D.subContracts.tracker = new ethers.Contract(trackerAddr, TRACKER_ABI, D.signer);
+    D.subContracts.welfare = new ethers.Contract(welfareAddr, WELFARE_POOL_ABI, D.signer);
+    D.subContracts.platform = new ethers.Contract(platformAddr, PLATFORM_OPS_ABI, D.signer);
+    D.subContracts.nodePool = new ethers.Contract(nodeAddr, NODE_POOL_ABI, D.signer);
+    D.subContracts.teamReward = new ethers.Contract(teamAddr, TEAM_REWARD_ABI, D.signer);
+
+    document.getElementById("walletAddr").textContent = shorten(D.userAddr);
+    document.getElementById("walletAddr").style.display = "inline-block";
+    document.getElementById("connectBtn").textContent = "已连接";
+    document.getElementById("connectBtn").disabled = true;
+
+    showToast("钱包已连接: " + shorten(D.userAddr), "success");
+    loadDashboard();
+  } catch (e) {
+    showToast("钱包连接失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  读取：全局统计（资金池余额 + 市场数）
+// ============================================================
+async function loadGlobalStats() {
+  if (!D.connected) return;
+  try {
+    const count = await D.factory.marketCount();
+    const welfareBal = await D.subContracts.welfare.poolBalance(D.usdtAddr);
+    const platformBal = await D.subContracts.platform.poolBalance(D.usdtAddr);
+    const nodeBal = await D.subContracts.nodePool.poolBalance(D.usdtAddr);
+
+    document.getElementById("statMarketCount").textContent = Number(count);
+    document.getElementById("statWelfare").textContent = fmt2(welfareBal) + " USDT";
+    document.getElementById("statPlatform").textContent = fmt2(platformBal) + " USDT";
+    document.getElementById("statNode").textContent = fmt2(nodeBal) + " USDT";
+  } catch (e) { console.error("loadGlobalStats:", e); }
+}
+
+// ============================================================
+//  读取：市场列表
+// ============================================================
+async function loadMarkets() {
+  if (!D.connected) return;
+  const container = document.getElementById("marketListContainer");
+  container.innerHTML = '<div class="loading"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="40" stroke-dashoffset="20"/></svg><p class="mt-8">加载市场...</p></div>';
+
+  try {
+    const count = await D.factory.marketCount();
+    const n = Number(count);
+    if (n === 0) {
+      container.innerHTML = '<div class="empty-state"><p>暂无预测市场</p><button class="btn btn-primary" onclick="switchPage(\'create\')">创建第一个市场</button></div>';
+      return;
+    }
+
+    const markets = [];
+    for (let i = 0; i < n; i++) {
+      const addr = await D.factory.getMarket(i);
+      const market = new ethers.Contract(addr, MARKET_ABI, D.provider);
+      const info = await market.getMarketInfo();
+      const [question, optionA, optionB, status, winner, poolA, poolB, deadline, end, selfCreated] = info;
+      const bc = await market.bettorCount();
+      markets.push({ addr, question, optionA, optionB, status: Number(status), winningOutcome: Number(winner), poolA, poolB, deadline: Number(deadline), endTime: Number(end), isSelfCreated: selfCreated, bettorCount: Number(bc) });
+    }
+    markets.reverse();
+
+    let html = '<div class="grid grid-2">';
+    for (const m of markets) {
+      const total = m.poolA + m.poolB;
+      const pctA = total > 0n ? (Number(m.poolA * 10000n / total) / 100) : 0;
+      const pctB = total > 0n ? (Number(m.poolB * 10000n / total) / 100) : 0;
+      const statusBadge = m.status === 0 ? "badge-blue" : m.status === 2 ? "badge-green" : m.status === 3 ? "badge-gray" : "badge-orange";
+      const statusLabel = STATUS_LABELS[m.status] || "未知";
+      const settled = m.status === 2;
+      const winA = settled && m.winningOutcome === 1;
+      const winB = settled && m.winningOutcome === 2;
+
+      html += '<div class="card market-card" onclick="openMarket(\'' + m.addr + '\')">';
+      html += '<div class="flex-between mb-8"><div class="flex gap-8">';
+      html += '<span class="badge ' + statusBadge + '">' + statusLabel + '</span>';
+      if (m.isSelfCreated) html += '<span class="badge badge-purple">社区</span>';
+      html += '</div></div>';
+      html += '<h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">' + m.question + '</h3>';
+      if (!settled && !m.status === 3) {
+        html += '<div class="pool-bar"><div class="pool-bar-a" style="width:' + pctA + '%;"></div><div class="pool-bar-b" style="width:' + pctB + '%;"></div></div>';
+      }
+      html += '<div class="flex-between"><div>';
+      html += '<span class="text-sm ' + (winA ? "text-green" : "text-dim") + '">' + m.optionA + (winA ? " &#x2713;" : "") + '</span>';
+      html += '<div class="stat-value-sm ' + (winA ? "text-green" : "") + '">' + fmt2(m.poolA) + ' U</div>';
+      html += '</div><div style="text-align:right;">';
+      html += '<span class="text-sm ' + (winB ? "text-red" : "text-dim") + '">' + m.optionB + (winB ? " &#x2713;" : "") + '</span>';
+      html += '<div class="stat-value-sm ' + (winB ? "text-red" : "") + '">' + fmt2(m.poolB) + ' U</div>';
+      html += '</div></div>';
+      html += '<div class="divider"></div>';
+      html += '<div class="flex-between text-xs text-dim">';
+      html += '<span>总池: ' + fmt2(total) + ' U</span>';
+      html += '<span>参与: ' + m.bettorCount + '</span>';
+      html += '<span>截止: ' + fmtTs(m.deadline) + '</span>';
+      html += '</div></div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p class="text-red">加载失败: ' + (e.reason || e.message) + '</p></div>';
+  }
+}
+
+// ============================================================
+//  读取：市场详情
+// ============================================================
+let currentMarketData = null;
+
+async function openMarket(addr) {
+  switchPage("market");
+  D.currentMarketAddr = addr;
+  const container = document.getElementById("marketDetailContainer");
+  container.innerHTML = '<div class="loading"><p>加载市场详情...</p></div>';
+
+  try {
+    const market = new ethers.Contract(addr, MARKET_ABI, D.provider);
+    const info = await market.getMarketInfo();
+    const [question, optionA, optionB, status, winner, poolA, poolB, deadline, end, selfCreated] = info;
+    const totalPool = await market.totalPool();
+    const bc = await market.bettorCount();
+    const creator = await market.creator();
+
+    const statusNum = Number(status);
+    const winnerNum = Number(winner);
+    const settled = statusNum === 2;
+    const cancelled = statusNum === 3;
+    const canBet = statusNum === 0 && Date.now() / 1000 < Number(deadline);
+
+    const pctA = totalPool > 0n ? (Number(poolA * 10000n / totalPool) / 100) : 0;
+    const pctB = totalPool > 0n ? (Number(poolB * 10000n / totalPool) / 100) : 0;
+    const oddsA = poolA > 0n ? fmt2(totalPool * 79n / poolA / 100n * 100n) : "-";
+    const oddsB = poolB > 0n ? fmt2(totalPool * 79n / poolB / 100n * 100n) : "-";
+
+    currentMarketData = { addr, question, optionA, optionB, status: statusNum, winningOutcome: winnerNum, poolA, poolB, totalPool, deadline: Number(deadline), endTime: Number(end), selfCreated, bettorCount: Number(bc), creator, oddsA, oddsB, canBet, settled, cancelled };
+
+    let html = '<div class="card mb-16"><div class="flex-between mb-16"><div class="flex gap-8">';
+    html += '<span class="badge ' + (statusNum === 0 ? "badge-blue" : statusNum === 2 ? "badge-green" : "badge-gray") + '">' + STATUS_LABELS[statusNum] + '</span>';
+    if (selfCreated) html += '<span class="badge badge-purple">社区创建</span>';
+    html += '</div><span class="text-sm text-dim">截止: ' + fmtTs(deadline) + '</span></div>';
+    html += '<h1 style="font-size: 22px; font-weight: 700;">' + question + '</h1>';
+    html += '<div class="flex-between mt-16"><div class="text-dim text-sm">总奖池</div><div class="stat-value text-primary">' + fmt2(totalPool) + ' USDT</div></div>';
+    html += '<div class="text-xs text-muted mt-8">参与: ' + Number(bc) + ' · 创建者: ' + shorten(creator) + '</div></div>';
+
+    // 投注选项
+    if (!cancelled && !settled) {
+      html += '<div class="grid grid-2 mb-16">';
+      html += '<div class="card" style="border-left:3px solid var(--green);"><h3 class="text-green mb-8">' + optionA + '</h3>';
+      html += '<div class="stat-value text-green">' + fmt2(poolA) + ' USDT</div>';
+      html += '<p class="text-sm text-dim mt-8">占比: ' + pctA + '% · 赔率: ' + oddsA + 'x</p>';
+      html += '<div class="pool-bar mt-8" style="height:6px;"><div class="pool-bar-a" style="width:' + pctA + '%;"></div></div>';
+      html += canBet ? '<button class="btn btn-green mt-16" style="width:100%;" onclick="showBetModal(1,\'' + optionA + '\')">投注 ' + optionA + '</button>' : '<p class="text-sm text-orange mt-16">投注已截止</p>';
+      html += '</div>';
+      html += '<div class="card" style="border-left:3px solid var(--red);"><h3 class="text-red mb-8">' + optionB + '</h3>';
+      html += '<div class="stat-value text-red">' + fmt2(poolB) + ' USDT</div>';
+      html += '<p class="text-sm text-dim mt-8">占比: ' + pctB + '% · 赔率: ' + oddsB + 'x</p>';
+      html += '<div class="pool-bar mt-8" style="height:6px;"><div class="pool-bar-b" style="width:' + pctB + '%;"></div></div>';
+      html += canBet ? '<button class="btn btn-red mt-16" style="width:100%;" onclick="showBetModal(2,\'' + optionB + '\')">投注 ' + optionB + '</button>' : '<p class="text-sm text-orange mt-16">投注已截止</p>';
+      html += '</div></div>';
+    }
+
+    // 我的投注
+    if (D.userAddr) {
+      const bet = await market.getBet(D.userAddr);
+      const [betA, betB, claimed] = bet;
+      const payout = await market.getPotentialPayout(D.userAddr);
+      html += '<div class="card mb-16"><h3 class="mb-16">我的投注</h3><div class="grid grid-3">';
+      html += '<div><div class="stat-label">投注 ' + optionA + '</div><div class="stat-value-sm text-green">' + fmt2(betA) + ' U</div></div>';
+      html += '<div><div class="stat-label">投注 ' + optionB + '</div><div class="stat-value-sm text-red">' + fmt2(betB) + ' U</div></div>';
+      html += '<div><div class="stat-label">潜在收益</div><div class="stat-value-sm text-primary">' + fmt2(payout) + ' U</div></div>';
+      html += '</div>';
+      if (settled && (betA > 0n || betB > 0n) && !claimed) {
+        html += '<button class="btn btn-primary mt-16" onclick="claimReward(\'' + addr + '\')">领取奖励</button>';
+      } else if (claimed) {
+        html += '<p class="text-green text-sm mt-16">已领取</p>';
+      }
+      html += '</div>';
+    }
+
+    // 奖池分配
+    if (settled) {
+      const wp = await market.winnersPool();
+      const wa = await market.welfarePoolAmt();
+      const pa = await market.platformPoolAmt();
+      const na = await market.nodePoolAmt();
+      html += '<div class="card mb-16"><h3 class="mb-16">奖池分配明细</h3>';
+      html += '<div class="pool-flow">';
+      html += '<div class="pool-box winners"><div class="pct text-green">79%</div><div class="name">获胜玩家</div></div><div class="pool-arrow">&middot;</div>';
+      html += '<div class="pool-box welfare"><div class="pct text-primary">15%</div><div class="name">福利池</div></div><div class="pool-arrow">&middot;</div>';
+      html += '<div class="pool-box platform"><div class="pct text-orange">5%</div><div class="name">运营池</div></div><div class="pool-arrow">&middot;</div>';
+      html += '<div class="pool-box node"><div class="pct text-purple">1%</div><div class="name">节点池</div></div></div>';
+      html += '<div class="grid grid-4 mt-16">';
+      html += '<div class="text-center"><div class="text-sm text-dim">获胜方分得</div><div class="font-bold text-green">' + fmt2(wp) + ' U</div></div>';
+      html += '<div class="text-center"><div class="text-sm text-dim">福利池注入</div><div class="font-bold text-primary">' + fmt2(wa) + ' U</div></div>';
+      html += '<div class="text-center"><div class="text-sm text-dim">运营池注入</div><div class="font-bold text-orange">' + fmt2(pa) + ' U</div></div>';
+      html += '<div class="text-center"><div class="text-sm text-dim">节点池注入</div><div class="font-bold text-purple">' + fmt2(na) + ' U</div></div>';
+      html += '</div></div>';
+    }
+
+    if (cancelled) {
+      html += '<div class="card text-center"><p class="text-orange">市场已取消，资金已自动退款</p></div>';
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p class="text-red">加载失败: ' + (e.reason || e.message) + '</p></div>';
+  }
+}
+
+// ============================================================
+//  投注弹窗
+// ============================================================
+function showBetModal(outcome, label) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  D.currentBetOutcome = outcome;
+  const m = currentMarketData;
+  document.getElementById("betMarketName").textContent = m.question;
+  const optEl = document.getElementById("betOption");
+  optEl.textContent = label;
+  optEl.className = outcome === 1 ? "text-sm font-bold text-green" : "text-sm font-bold text-red";
+  const odds = outcome === 1 ? m.oddsA : m.oddsB;
+  document.getElementById("betOdds").textContent = odds + "x";
+  updateBetSummary();
+  document.getElementById("betModal").classList.add("show");
+}
+
+function setBetAmount(v) {
+  document.getElementById("betAmount").value = v;
+  updateBetSummary();
+}
+
+function updateBetSummary() {
+  const amt = parseFloat(document.getElementById("betAmount").value) || 0;
+  document.getElementById("betSummaryAmount").textContent = amt + " USDT";
+  const m = currentMarketData;
+  const odds = D.currentBetOutcome === 1 ? parseFloat(m.oddsA) : parseFloat(m.oddsB);
+  const payout = amt * odds;
+  document.getElementById("betSummaryPayout").textContent = payout.toFixed(2) + " USDT";
+  document.getElementById("betSummaryActivity").textContent = (amt * 1.5).toFixed(1);
+}
+
+document.getElementById("betAmount").addEventListener("input", updateBetSummary);
+
+function closeBetModal() { document.getElementById("betModal").classList.remove("show"); }
+
+// ============================================================
+//  链上写入：投注
+// ============================================================
+async function confirmBet() {
+  if (!D.signer || !D.currentMarketAddr) { showToast("请先连接钱包", "error"); return; }
+  const btn = document.getElementById("confirmBetBtn");
+  btn.disabled = true; btn.textContent = "处理中...";
+  try {
+    const amountStr = document.getElementById("betAmount").value;
+    const amount = ethers.parseUnits(amountStr, 18);
+    const market = new ethers.Contract(D.currentMarketAddr, MARKET_ABI, D.signer);
+    const betToken = await market.betToken();
+    const erc20 = new ethers.Contract(betToken, ERC20_ABI, D.signer);
+    const allowance = await erc20.allowance(D.userAddr, D.currentMarketAddr);
+    if (allowance < amount) {
+      showToast("授权代币...", "info");
+      const approveTx = await erc20.approve(D.currentMarketAddr, amount);
+      await approveTx.wait();
+    }
+    showToast("提交投注交易...", "info");
+    const tx = await market.bet(D.currentBetOutcome, amount);
+    await tx.wait();
+    showToast("投注成功! TX: " + tx.hash.slice(0, 16) + "...", "success");
+    closeBetModal();
+    openMarket(D.currentMarketAddr);
+    loadGlobalStats();
+  } catch (e) {
+    showToast("投注失败: " + (e.reason || e.message || "未知错误"), "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "确认投注";
+  }
+}
+
+// ============================================================
+//  链上写入：领取奖励
+// ============================================================
+async function claimReward(addr) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  try {
+    const market = new ethers.Contract(addr, MARKET_ABI, D.signer);
+    showToast("提交领取交易...", "info");
+    const tx = await market.claim();
+    await tx.wait();
+    showToast("领取成功! TX: " + tx.hash.slice(0, 16) + "...", "success");
+    openMarket(addr);
+  } catch (e) {
+    showToast("领取失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  创建市场
+// ============================================================
+function setCreateType(self) {
+  D.isSelfCreate = self;
+  document.getElementById("createTypeOfficial").className = self ? "btn btn-outline" : "btn btn-primary";
+  document.getElementById("createTypeSelf").className = self ? "btn btn-primary" : "btn btn-outline";
+  document.getElementById("selfCreateNotice").style.display = self ? "block" : "none";
+}
+
+async function createMarket() {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  const q = document.getElementById("createQuestion").value.trim();
+  const oA = document.getElementById("createOptionA").value.trim();
+  const oB = document.getElementById("createOptionB").value.trim();
+  const days = parseInt(document.getElementById("createDuration").value) || 3;
+  let tokenAddr = document.getElementById("createTokenAddr").value.trim() || D.usdtAddr;
+
+  if (!q || !oA || !oB) { showToast("请填写完整信息", "error"); return; }
+  if (D.isSelfCreate && !D.signer) { showToast("社区创建需连接钱包", "error"); return; }
+
+  const btn = document.getElementById("createMarketBtn");
+  btn.disabled = true; btn.textContent = "处理中...";
+
+  try {
+    const endTime = Math.floor(Date.now() / 1000) + days * 86400;
+    let tx;
+    if (D.isSelfCreate) {
+      const erc20 = new ethers.Contract(tokenAddr, ERC20_ABI, D.signer);
+      const deposit = ethers.parseUnits("20", 18);
+      const allowance = await erc20.allowance(D.userAddr, D.factoryAddr);
+      if (allowance < deposit) {
+        showToast("授权 20U 保证金...", "info");
+        const approveTx = await erc20.approve(D.factoryAddr, deposit);
+        await approveTx.wait();
+      }
+      showToast("提交社区创建交易...", "info");
+      tx = await D.factory.createSelfMarket(q, oA, oB, endTime, tokenAddr, ethers.ZeroAddress, 0, false);
+    } else {
+      showToast("提交创建交易...", "info");
+      tx = await D.factory.createMarket(q, oA, oB, endTime, tokenAddr, ethers.ZeroAddress, 0, false);
+    }
+    await tx.wait();
+    showToast("市场创建成功! TX: " + tx.hash.slice(0, 16) + "...", "success");
+    document.getElementById("createQuestion").value = "";
+    document.getElementById("createOptionA").value = "";
+    document.getElementById("createOptionB").value = "";
+    setTimeout(() => { switchPage("home"); }, 1500);
+  } catch (e) {
+    showToast("创建失败: " + (e.reason || e.message), "error");
+  } finally {
+    btn.disabled = false; btn.textContent = "创建市场";
+  }
+}
+
+// ============================================================
+//  读取：用户面板
+// ============================================================
+async function loadDashboard() {
+  if (!D.userAddr) return;
+  const container = document.getElementById("dashboardContainer");
+  container.innerHTML = '<div class="loading"><p>加载用户数据...</p></div>';
+
+  try {
+    const tracker = D.subContracts.tracker;
+    const erc20 = new ethers.Contract(D.usdtAddr, ERC20_ABI, D.provider);
+    const platform = D.subContracts.platform;
+    const nodePool = D.subContracts.nodePool;
+
+    const [activity, dailyFlow, lastBet] = await tracker.getActivity(D.usdtAddr, D.userAddr);
+    const balance = await erc20.balanceOf(D.userAddr);
+    const ref = await tracker.referrer(D.userAddr);
+    const directCount = await tracker.effectiveDirectCount(D.userAddr);
+    const isNode = await nodePool.isNode(D.userAddr);
+    const tier = await nodePool.getNodeTier(D.userAddr);
+    const isSubbed = await platform.isSubscribed(D.userAddr);
+
+    const welfareBal = await D.subContracts.welfare.poolBalance(D.usdtAddr);
+    const platformBal = await platform.poolBalance(D.usdtAddr);
+    const nodeBal = await nodePool.poolBalance(D.usdtAddr);
+
+    let html = '<div class="grid grid-4 mb-24">';
+    html += '<div class="stat-card"><div class="stat-label">USDT 余额</div><div class="stat-value text-primary">' + fmt2(balance) + '</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">总活跃度</div><div class="stat-value text-green">' + fmt2(activity) + '</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">今日流水</div><div class="stat-value">' + fmt2(dailyFlow) + ' U</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">有效直推</div><div class="stat-value">' + Number(directCount) + ' 人</div></div>';
+    html += '</div>';
+
+    html += '<div class="grid grid-2 mb-24"><div class="card"><h3 class="mb-16">推荐信息</h3>';
+    html += '<div class="flex-between mb-8"><span class="text-sm text-dim">推荐人</span><span class="text-sm font-mono">' + (ref === "0x0000000000000000000000000000000000000000" ? "无" : shorten(ref)) + '</span></div>';
+    html += '<div class="flex-between mb-8"><span class="text-sm text-dim">节点身份</span><span class="badge ' + (isNode ? "badge-purple" : "badge-gray") + '">' + (isNode ? TIER_NAMES[Number(tier)] : "非节点") + '</span></div>';
+    html += '<div class="flex-between mb-8"><span class="text-sm text-dim">AI 套餐</span><span class="badge ' + (isSubbed ? "badge-green" : "badge-gray") + '">' + (isSubbed ? "已订阅" : "未订阅") + '</span></div>';
+    html += '<div class="divider"></div>';
+    html += '<div class="text-xs text-dim mb-8">AI 套餐 (费用进运营池):</div>';
+    html += '<div class="flex gap-8 flex-wrap mb-8">';
+    html += '<button class="btn btn-outline btn-sm" onclick="subscribeAI(0)">月卡 19.9U</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="subscribeAI(1)">季卡 49.9U</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="subscribeAI(2)">年卡 129U</button>';
+    html += '</div></div>';
+
+    html += '<div class="card"><h3 class="mb-16">七级团队活跃度</h3>';
+    html += '<div class="card mb-16" style="background: var(--bg-input); padding: 12px; border-radius: 8px;">';
+    html += '<div class="text-xs text-muted">激活: 流水 &ge; 10U + 直推 &ge; 5人 | 封顶: 普通3倍 / 节点5倍</div></div>';
+    const rates = [["1级","50%"],["2级","25%"],["3级","12.5%"],["4级","6.3%"],["5级","3.1%"],["6级","1.6%"],["7级","0.8%"]];
+    html += '<div class="grid grid-3" style="gap:8px;">';
+    for (const [lvl, rate] of rates) {
+      html += '<div class="level-chip"><div class="lvl">' + lvl + '</div><div class="rate">' + rate + '</div></div>';
+    }
+    html += '</div></div></div>';
+
+    html += '<div class="card"><h3 class="mb-16">平台资金池</h3><div class="grid grid-3">';
+    html += '<div><div class="stat-label">福利池</div><div class="stat-value-sm text-primary">' + fmt2(welfareBal) + ' U</div></div>';
+    html += '<div><div class="stat-label">运营池</div><div class="stat-value-sm text-orange">' + fmt2(platformBal) + ' U</div></div>';
+    html += '<div><div class="stat-label">节点池</div><div class="stat-value-sm text-purple">' + fmt2(nodeBal) + ' U</div></div>';
+    html += '</div></div>';
+
+    // Team reward claim
+    const teamBal = await D.subContracts.teamReward.poolBalance(D.usdtAddr);
+    html += '<div class="card mt-24"><h3 class="mb-16">团队活跃度分红</h3>';
+    html += '<div class="flex-between mb-8"><span class="text-sm text-dim">团队分红池余额</span><span class="stat-value-sm text-primary">' + fmt2(teamBal) + ' U</span></div>';
+    html += '<div class="text-xs text-muted mb-16">领取条件：个人流水 &ge; 10U + 直推 &ge; 5人。封顶：普通3倍 / 节点5倍。超额部分 50%回流福利池 / 20%进运营池。</div>';
+    html += '<button class="btn btn-primary" onclick="claimTeamReward()">领取团队分红</button></div>';
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p class="text-red">加载失败: ' + (e.reason || e.message) + '</p></div>';
+  }
+}
+
+// ============================================================
+//  链上写入：领取团队分红
+// ============================================================
+async function claimTeamReward() {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  try {
+    showToast("提交领取团队分红...", "info");
+    const tx = await D.subContracts.teamReward.claimTeamReward(D.usdtAddr, D.userAddr);
+    await tx.wait();
+    showToast("团队分红领取成功! TX: " + tx.hash.slice(0, 16) + "...", "success");
+    loadDashboard();
+  } catch (e) {
+    showToast("领取失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  链上写入：AI 订阅
+// ============================================================
+async function subscribeAI(subType) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  const prices = ["19.9", "49.9", "129"];
+  const names = ["月卡", "季卡", "年卡"];
+  try {
+    const erc20 = new ethers.Contract(D.usdtAddr, ERC20_ABI, D.signer);
+    const price = ethers.parseUnits(prices[subType], 18);
+    const allowance = await erc20.allowance(D.userAddr, await D.subContracts.platform.getAddress());
+    if (allowance < price) {
+      showToast("授权 " + prices[subType] + "U...", "info");
+      const approveTx = await erc20.approve(await D.subContracts.platform.getAddress(), price);
+      await approveTx.wait();
+    }
+    showToast("订阅 " + names[subType] + "...", "info");
+    const tx = await D.subContracts.platform.subscribeAI(subType);
+    await tx.wait();
+    showToast("订阅成功!", "success");
+    loadDashboard();
+  } catch (e) {
+    showToast("订阅失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  读取：节点页面
+// ============================================================
+async function loadNodePage() {
+  if (!D.connected) return;
+  const container = document.getElementById("nodeContainer");
+  container.innerHTML = '<div class="loading"><p>加载节点数据...</p></div>';
+
+  try {
+    const nodePool = D.subContracts.nodePool;
+    const [genesis, superTier, normal] = await nodePool.getTierStats();
+    const poolBal = await nodePool.poolBalance(D.usdtAddr);
+
+    let myNode = { isNode: false, tier: 0 };
+    if (D.userAddr) {
+      myNode.isNode = await nodePool.isNode(D.userAddr);
+      myNode.tier = Number(await nodePool.getNodeTier(D.userAddr));
+    }
+
+    let html = '<div class="card mb-24"><h3 class="mb-16">节点池状态</h3>';
+    html += '<div class="grid grid-3"><div><div class="stat-label">池余额</div><div class="stat-value text-purple">' + fmt2(poolBal) + ' U</div></div></div>';
+    html += '<div class="text-xs text-muted mt-16">70% 静态三档均分 + 30% 直推加权 | 未分配留存复利不销毁</div></div>';
+
+    html += '<div class="grid grid-3 mb-24">';
+    const tiers = [
+      { name: "创世节点", count: Number(genesis), cap: 49, share: "20%", color: "purple" },
+      { name: "超级节点", count: Number(superTier), cap: 314, share: "30%", color: "primary" },
+      { name: "普通节点", count: Number(normal), cap: 951, share: "50%", color: "orange" },
+    ];
+    for (const t of tiers) {
+      html += '<div class="card" style="border-top:3px solid var(--' + t.color + ');">';
+      html += '<div class="flex-between mb-8"><span class="font-bold text-' + t.color + '">' + t.name + '</span><span class="badge badge-blue">静态 ' + t.share + '</span></div>';
+      html += '<div class="stat-value">' + t.count + ' / ' + t.cap + '</div><div class="stat-label">已注册 / 上限</div></div>';
+    }
+    html += '</div>';
+
+    if (D.userAddr) {
+      html += '<div class="card"><h3 class="mb-16">我的节点</h3>';
+      html += '<div class="flex-between"><span class="text-sm text-dim">节点身份</span><span class="badge ' + (myNode.isNode ? "badge-purple" : "badge-gray") + '">' + (myNode.isNode ? TIER_NAMES[myNode.tier] : "非节点") + '</span></div>';
+      html += '<div class="divider"></div><p class="text-xs text-muted">每日资格: 当日个人有效流水 &ge; 10U</p></div>';
+    } else {
+      html += '<div class="card text-center"><p class="text-dim">请先连接钱包查看节点信息</p></div>';
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p class="text-red">加载失败: ' + (e.reason || e.message) + '</p></div>';
+  }
+}
+
+// ============================================================
+//  读取：管理后台
+// ============================================================
+async function loadAdminPage() {
+  if (!D.connected) return;
+  const container = document.getElementById("adminContainer");
+  container.innerHTML = '<div class="loading"><p>加载管理数据...</p></div>';
+
+  try {
+    const count = await D.factory.marketCount();
+    const paused = await D.factory.paused();
+    const admin = await D.factory.admin();
+    const welfareBal = await D.subContracts.welfare.poolBalance(D.usdtAddr);
+    const platformBal = await D.subContracts.platform.poolBalance(D.usdtAddr);
+    const nodeBal = await D.subContracts.nodePool.poolBalance(D.usdtAddr);
+
+    const isAdmin = D.userAddr && D.userAddr.toLowerCase() === admin.toLowerCase();
+
+    let html = '<div class="grid grid-4 mb-24">';
+    html += '<div class="stat-card"><div class="stat-label">市场总数</div><div class="stat-value text-primary">' + Number(count) + '</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">系统状态</div><div class="stat-value"><span class="badge ' + (paused ? "badge-red" : "badge-green") + '">' + (paused ? "已暂停" : "运行中") + '</span></div></div>';
+    html += '<div class="stat-card"><div class="stat-label">福利池</div><div class="stat-value-sm text-primary">' + fmt2(welfareBal) + ' U</div></div>';
+    html += '<div class="stat-card"><div class="stat-label">节点池</div><div class="stat-value-sm text-purple">' + fmt2(nodeBal) + ' U</div></div>';
+    html += '</div>';
+
+    if (isAdmin && D.signer) {
+      html += '<div class="card mb-24"><h3 class="mb-16">管理操作</h3><div class="flex gap-12 flex-wrap">';
+      html += '<button class="btn btn-primary" onclick="adminAction(\'welfare\')">触发福利池分红</button>';
+      html += '<button class="btn btn-primary" onclick="adminAction(\'node\')">触发节点池分红</button>';
+      if (!paused) {
+        html += '<button class="btn btn-red" onclick="adminAction(\'pause\')">紧急暂停</button>';
+      } else {
+        html += '<button class="btn btn-green" onclick="adminAction(\'resume\')">恢复运行</button>';
+      }
+      html += '</div></div>';
+
+      // 节点注册
+      html += '<div class="card mb-24"><h3 class="mb-16">节点注册</h3>';
+      html += '<div class="flex gap-12 flex-wrap" style="align-items:flex-end;">';
+      html += '<div><label class="field-label">节点地址</label><input class="input" id="regNodeAddr" placeholder="0x..." style="width:340px;"></div>';
+      html += '<div><label class="field-label">档位</label><select class="input" id="regNodeTier" style="width:140px;"><option value="1">创世节点</option><option value="2">超级节点</option><option value="3">普通节点</option></select></div>';
+      html += '<button class="btn btn-primary" onclick="registerNode()">注册节点</button>';
+      html += '</div></div>';
+
+      // 待结算市场
+      html += '<div class="card"><h3 class="mb-16">市场列表 (最近10个)</h3><table class="table"><thead><tr><th>#</th><th>地址</th><th>状态</th><th>操作</th></tr></thead><tbody>';
+      const startIdx = Math.max(0, Number(count) - 10);
+      for (let i = startIdx; i < Number(count); i++) {
+        const addr = await D.factory.getMarket(i);
+        const market = new ethers.Contract(addr, MARKET_ABI, D.provider);
+        const info = await market.getMarketInfo();
+        const statusNum = Number(info[3]);
+        html += '<tr><td class="text-dim">' + (i + 1) + '</td><td class="font-mono text-dim text-sm">' + shorten(addr) + '</td>';
+        html += '<td><span class="badge ' + (statusNum === 0 ? "badge-blue" : statusNum === 2 ? "badge-green" : "badge-gray") + '">' + STATUS_LABELS[statusNum] + '</span></td>';
+        if (statusNum === 0 || statusNum === 1) {
+          html += '<td><button class="btn btn-green btn-sm" onclick="settleMarket(\'' + addr + '\',1)">结算A</button> <button class="btn btn-red btn-sm" onclick="settleMarket(\'' + addr + '\',2)">结算B</button></td>';
+        } else {
+          html += '<td><span class="text-dim text-sm">-</span></td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div class="card text-center"><p class="text-red">仅管理员 ( ' + shorten(admin) + ' ) 可查看操作面板</p></div>';
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty-state"><p class="text-red">加载失败: ' + (e.reason || e.message) + '</p></div>';
+  }
+}
+
+// ============================================================
+//  链上写入：注册节点
+// ============================================================
+async function registerNode() {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  const addr = document.getElementById("regNodeAddr").value.trim();
+  const tier = parseInt(document.getElementById("regNodeTier").value);
+  if (!addr || addr.length < 42) { showToast("请填写有效的节点地址", "error"); return; }
+  try {
+    showToast("提交节点注册...", "info");
+    const tx = await D.factory.registerNode(addr, tier);
+    await tx.wait();
+    showToast("节点注册成功! 档位: " + TIER_NAMES[tier], "success");
+    loadAdminPage();
+  } catch (e) {
+    showToast("注册失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  链上写入：管理操作
+// ============================================================
+async function adminAction(action) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  try {
+    let tx;
+    switch (action) {
+      case "welfare":
+        tx = await D.factory.triggerWelfareDistribution(D.usdtAddr);
+        break;
+      case "node":
+        tx = await D.factory.triggerNodeDistribution(D.usdtAddr);
+        break;
+      case "pause":
+        tx = await D.factory.pauseAll();
+        break;
+      case "resume":
+        tx = await D.factory.resume();
+        break;
+    }
+    showToast("交易提交: " + tx.hash.slice(0, 16) + "...", "info");
+    await tx.wait();
+    showToast("操作成功!", "success");
+    loadAdminPage();
+    loadGlobalStats();
+  } catch (e) {
+    showToast("操作失败: " + (e.reason || e.message), "error");
+  }
+}
+
+async function settleMarket(addr, outcome) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  try {
+    showToast("提交结算交易...", "info");
+    const tx = await D.factory.settleMarket(addr, outcome);
+    await tx.wait();
+    showToast("结算成功! 选项 " + (outcome === 1 ? "A" : "B") + " 获胜", "success");
+    loadAdminPage();
+  } catch (e) {
+    showToast("结算失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// ============================================================
+//  Modal overlay click
+// ============================================================
+document.getElementById("betModal").addEventListener("click", e => {
+  if (e.target.id === "betModal") closeBetModal();
+});
+
+// ============================================================
+//  推广系统 — 推广链接、推荐绑定、统计面板
+// ============================================================
+
+// 生成推广链接
+function getReferralLink() {
+  if (!D.userAddr) return "请先连接钱包";
+  const base = window.location.origin + window.location.pathname;
+  return base + "?ref=" + D.userAddr;
+}
+
+// 复制推广链接
+async function copyReferralLink() {
+  const link = getReferralLink();
+  if (link.startsWith("请先")) { showToast(link, "error"); return; }
+  try {
+    await navigator.clipboard.writeText(link);
+    showToast("推广链接已复制!", "success");
+  } catch {
+    const input = document.getElementById("referralLink");
+    input.select();
+    document.execCommand("copy");
+    showToast("推广链接已复制!", "success");
+  }
+}
+
+// URL 解析推荐人
+function parseReferrerFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const ref = params.get("ref");
+  if (ref && ethers.isAddress(ref)) {
+    try { localStorage.setItem("pm_pending_referrer", ref); } catch {}
+    return ref;
+  }
+  return null;
+}
+
+// 检查是否有待绑定的推荐人
+async function checkPendingReferrer() {
+  if (!D.userAddr || !D.signer) return;
+  try {
+    const pending = localStorage.getItem("pm_pending_referrer");
+    if (!pending) return;
+    if (pending.toLowerCase() === D.userAddr.toLowerCase()) {
+      localStorage.removeItem("pm_pending_referrer");
+      return; // 不能推荐自己
+    }
+    // 检查是否已绑定
+    const currentRef = await D.subContracts.tracker.referrer(D.userAddr);
+    if (currentRef && currentRef !== ethers.ZeroAddress) {
+      localStorage.removeItem("pm_pending_referrer");
+      return; // 已绑定
+    }
+    // 弹出确认绑定
+    if (confirm("检测到推荐人: " + shorten(pending) + "\n\n确认绑定推荐关系？绑定后不可更改。")) {
+      await bindReferrerBySignature(pending);
+    } else {
+      localStorage.removeItem("pm_pending_referrer");
+    }
+  } catch (e) { console.error("checkPendingReferrer:", e); }
+}
+
+// EIP-712 签名绑定推荐人
+async function bindReferrerBySignature(referrerAddr) {
+  if (!D.signer) { showToast("请先连接钱包", "error"); return; }
+  try {
+    showToast("正在生成签名...", "info");
+    const trackerAddr = await D.factory.activityTracker();
+    const nonce = await D.subContracts.tracker.nonces(D.userAddr);
+
+    const domain = {
+      name: "PredictionMarketReferral",
+      version: "1",
+      chainId: D.chainId,
+      verifyingContract: trackerAddr,
+    };
+
+    const types = {
+      BindReferrer: [
+        { name: "user", type: "address" },
+        { name: "referrer", type: "address" },
+        { name: "nonce", type: "uint256" },
+      ],
+    };
+
+    const value = {
+      user: D.userAddr,
+      referrer: referrerAddr,
+      nonce: nonce,
+    };
+
+    const signature = await D.signer.signTypedData(domain, types, value);
+    showToast("签名完成，提交链上绑定...", "info");
+
+    const tx = await D.subContracts.tracker.bindReferrerBySignature(
+      D.userAddr, referrerAddr, nonce, signature
+    );
+    await tx.wait();
+    localStorage.removeItem("pm_pending_referrer");
+    showToast("推荐关系绑定成功!", "success");
+    loadReferralPage();
+  } catch (e) {
+    showToast("绑定失败: " + (e.reason || e.message), "error");
+  }
+}
+
+// 加载推广页面
+async function loadReferralPage() {
+  const container = document.getElementById("referralContainer");
+  if (!D.userAddr) {
+    container.innerHTML = '<div class="loading"><p>请先连接钱包</p></div>';
+    return;
+  }
+  try {
+    // 推广链接
+    const link = getReferralLink();
+    document.getElementById("referralLink").value = link;
+
+    // 直推人数
+    const directCount = await D.subContracts.tracker.effectiveDirectCount(D.userAddr);
+    document.getElementById("refDirectCount").textContent = Number(directCount);
+
+    // 活跃度
+    const [totalAct] = await D.subContracts.tracker.getActivity(D.usdtAddr, D.userAddr);
+    document.getElementById("refTeamActivity").textContent = fmt2(totalAct);
+
+    // 团队层级（查询推荐链）
+    const chain = await D.subContracts.tracker.getReferralChain(D.userAddr, 7);
+    let depth = 0;
+    for (const addr of chain) { if (addr && addr !== ethers.ZeroAddress) depth++; }
+    document.getElementById("refTeamDepth").textContent = depth + " 层";
+
+    // 团队结构
+    const directs = await D.subContracts.tracker.getDirectReferrals(D.userAddr);
+    let treeHtml = "<div class='grid grid-1 gap-8'>";
+    if (directs.length === 0) {
+      treeHtml += '<p class="text-dim text-sm">暂无直推成员</p>';
+    } else {
+      for (const d of directs) {
+        const [dAct] = await D.subContracts.tracker.getActivity(D.usdtAddr, d);
+        treeHtml += `<div class="card" style="padding:10px 14px;"><div class="flex-between"><span class="font-mono text-sm">${shorten(d)}</span><span class="text-sm text-green">活跃度: ${fmt2(dAct)}</span></div></div>`;
+      }
+    }
+    treeHtml += "</div>";
+    document.getElementById("refTeamTree").innerHTML = treeHtml;
+  } catch (e) {
+    console.error("loadReferralPage:", e);
+  }
+}
+
+// 页面切换钩子：加载推广页
+const _origSwitchPage = switchPage;
+switchPage = function(page) {
+  _origSwitchPage(page);
+  if (page === "referral") loadReferralPage();
+};
+
+// ============================================================
+//  K 线图 — 币安 BTC/USDT 实时行情
+// ============================================================
+
+let klineChart = null;
+
+async function loadKlineChart(symbol, interval) {
+  symbol = symbol || "BTCUSDT";
+  interval = interval || "1h";
+  try {
+    const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=100`);
+    const data = await res.json();
+    const candles = data.map(d => ({
+      t: d[0],
+      o: parseFloat(d[1]),
+      h: parseFloat(d[2]),
+      l: parseFloat(d[3]),
+      c: parseFloat(d[4]),
+    }));
+
+    const ctx = document.getElementById("klineCanvas").getContext("2d");
+
+    if (klineChart) klineChart.destroy();
+
+    klineChart = new Chart(ctx, {
+      type: "candlestick",
+      data: {
+        datasets: [{
+          label: symbol,
+          data: candles,
+          color: { up: "#00e878", down: "#ff4757", unchanged: "#8b95a7" },
+          borderColor: { up: "#00e878", down: "#ff4757", unchanged: "#8b95a7" },
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const d = new Date(items[0].raw.t);
+                return d.toLocaleString("zh-CN");
+              },
+            },
+          },
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            grid: { color: "#1e2a3a" },
+            ticks: { color: "#8b95a7", callback: (v) => v.toLocaleString() },
+          },
+        },
+      },
+    });
+
+    // 更新当前价格显示
+    const last = candles[candles.length - 1];
+    const priceEl = document.getElementById("klineCurrentPrice");
+    if (priceEl) priceEl.textContent = last.c.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT";
+  } catch (e) {
+    console.error("loadKlineChart:", e);
+    showToast("K线数据加载失败", "error");
+  }
+}
+
+// K线周期切换
+function setKlineInterval(interval) {
+  loadKlineChart("BTCUSDT", interval);
+}
+
+// ============================================================
+//  初始化钩子
+// ============================================================
+
+// 页面加载时解析 URL 推荐人
+(function initReferral() {
+  parseReferrerFromUrl();
+})();
+
+// 连接钱包后检查推荐人
+const _origConnectWallet = connectWallet;
+connectWallet = async function() {
+  await _origConnectWallet();
+  await checkPendingReferrer();
+};
+
+// 初始化 K 线图（需要 Chart.js 已加载）
+function initKline() {
+  if (typeof Chart === "undefined") {
+    setTimeout(initKline, 500);
+    return;
+  }
+  loadKlineChart("BTCUSDT", "1h");
+}
+
+// ============================================================
+//  自动尝试从 localStorage 恢复配置
+// ============================================================
+(function autoRestore() {
+  try {
+    const saved = localStorage.getItem("pm_dapp_config");
+    if (saved) {
+      const cfg = JSON.parse(saved);
+      if (cfg.factoryAddr) document.getElementById("cfgFactory").value = cfg.factoryAddr;
+      if (cfg.rpcUrl) document.getElementById("cfgRPC").value = cfg.rpcUrl;
+      if (cfg.usdtAddr) document.getElementById("cfgUSDT").value = cfg.usdtAddr;
+    }
+  } catch {}
+})();
+
+// 保存配置到 localStorage
+function saveConfig() {
+  try {
+    localStorage.setItem("pm_dapp_config", JSON.stringify({
+      factoryAddr: document.getElementById("cfgFactory").value,
+      rpcUrl: document.getElementById("cfgRPC").value,
+      usdtAddr: document.getElementById("cfgUSDT").value,
+    }));
+  } catch {}
+}
+
+// 包装 initApp 以保存配置
+const _origInit = initApp;
+initApp = async function() {
+  await _origInit();
+  if (D.connected) saveConfig();
+};
+</script>
+
+</body>
+</html>
